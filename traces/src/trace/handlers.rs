@@ -1,1 +1,1 @@
-pub fn useless() {}
+pub trait TraceHandler {}
