@@ -13,9 +13,9 @@ impl Trace for PrintTraceHandler {
     }
 }
 impl TraceHandler for PrintTraceHandler {
-    
 }
 
+// TODO - ajouter un crate pour gérer des fichiers
 pub struct FileTraceHanlder {}
 impl FileTraceHanlder {
     pub fn new() -> Self {
@@ -29,5 +29,4 @@ impl Trace for FileTraceHanlder {
     }
 }
 impl TraceHandler for FileTraceHanlder {
-    
 }
