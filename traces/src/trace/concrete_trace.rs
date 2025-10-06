@@ -25,13 +25,11 @@ impl<'a> HandlerRegister<'a> for ConcreteTrace<'a> {
 }
 impl<'a> Trace for ConcreteTrace<'a> {
     fn log(&self, level: TraceLevel, message: &str) {
-        let message = format!("{} - {}", level, message);
-        println!("{message}");
 
         // Appeler tous les handlers enregistrés
         let handlers = self.handlers.lock().unwrap();
         for handler in handlers.iter() {
-            handler.log(level, message.as_str());
+            handler.log(level, message);
         }
     }
 }
