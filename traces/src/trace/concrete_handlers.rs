@@ -1,6 +1,6 @@
 use crate::trace::{handlers::TraceHandler, Trace};
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::{prelude::*, SeekFrom};
 use std::path::Path;
 
 pub struct PrintTraceHandler {}
@@ -38,6 +38,7 @@ impl FileTraceHanlder {
 }
 impl Trace for FileTraceHanlder {
     fn log(&self, level: super::TraceLevel, message: &str) -> () {
+        let message = format!("{} - {}\n", level, message);
         let path = Path::new(self.file_path.as_str());
         let display = path.display();
         // TODO - Manage error !
@@ -49,8 +50,8 @@ impl Trace for FileTraceHanlder {
             Err(why) => panic!("couldn't create {}: {}", display, why),
             Ok(file) => file,
         };
-        let message = format!("{} - {}\n", level, message);
-        
+        file.seek(SeekFrom::End(0)).unwrap();
+
         // TODO - Manage error !
         match file.write_all(message.as_str().as_bytes()){
             Err(why) => panic!("couldn't write to {}: {}", display, why),
