@@ -3,4 +3,12 @@ name = "traces"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "traces"
+path = "src/lib.rs"
+
+[[bin]]
+name = "traces"
+path = "src/main.rs"
+
 [dependencies]
