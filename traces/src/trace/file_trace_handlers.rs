@@ -3,21 +3,6 @@ use std::fs::File;
 use std::io::{prelude::*, SeekFrom};
 use std::path::Path;
 
-pub struct PrintTraceHandler {}
-impl PrintTraceHandler {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-impl Trace for PrintTraceHandler {
-    fn log(&self, level: super::TraceLevel, message: &str) -> () {
-        let message = format!("{} - {}", level, message);
-        println!("{message}");
-    }
-}
-impl TraceHandler for PrintTraceHandler {
-}
-
 // TODO - ajouter un crate pour gérer des fichiers
 pub struct FileTraceHanlder {
     file_path: String
