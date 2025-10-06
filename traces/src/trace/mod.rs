@@ -14,11 +14,11 @@ use crate::trace::{concrete_handlers::{FileTraceHanlder, PrintTraceHandler}, tra
 pub fn create_trace() -> impl Trace {
     let trace = ConcreteTrace::new();
 
-    let printHandler = PrintTraceHandler::new();
-    let fileHandler = FileTraceHanlder::new();
+    let print_handler = PrintTraceHandler::new();
+    let file_handler = FileTraceHanlder::new();
 
-    trace.register(printHandler);
-    trace.register(fileHandler);
+    trace.register(print_handler);
+    trace.register(file_handler);
 
     trace
 }
