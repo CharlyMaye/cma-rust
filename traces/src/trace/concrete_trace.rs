@@ -1,26 +1,37 @@
-use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 use super::level::TraceLevel;
 use super::trace::{Trace, HandlerRegister};
 use super::handlers::TraceHandler;
 
-pub struct ConcreteTrace{
-    // TODO - HashMap
+// TODO - static lifetime?
+
+pub struct ConcreteTrace<'a> {
+    handlers: Arc<Mutex<Vec<Box<dyn TraceHandler + 'a>>>>,
 
 }
-impl ConcreteTrace {
+impl<'a> ConcreteTrace<'a> {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            handlers: Arc::new(Mutex::new(Vec::new())),
+        }
     }
 }
-impl HandlerRegister for ConcreteTrace {
-    fn register<T: TraceHandler>(&self, handler: T) -> () {
-        
-    }    
+impl<'a> HandlerRegister<'a> for ConcreteTrace<'a> {
+    fn register<T: TraceHandler + 'a>(&self, handler: T) -> () {
+        let mut handlers = self.handlers.lock().unwrap();
+        handlers.push(Box::new(handler));
+    }  
 }
-impl Trace for ConcreteTrace {
+impl<'a> Trace for ConcreteTrace<'a> {
     fn log(&self, level: TraceLevel, message: &str) {
         let message = format!("{} - {}", level, message);
         println!("{message}");
+
+        // Appeler tous les handlers enregistrés
+        let handlers = self.handlers.lock().unwrap();
+        for handler in handlers.iter() {
+            // handler.handle(level, message.as_str());
+        }
     }
 }

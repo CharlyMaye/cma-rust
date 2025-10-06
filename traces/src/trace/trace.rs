@@ -5,6 +5,6 @@ pub trait Trace {
     fn log(&self, level: TraceLevel, message: &str) -> ();
 }
 
-pub trait HandlerRegister {
-    fn register<T: TraceHandler>(&self, handler: T) -> ();
+pub trait HandlerRegister<'a> {
+    fn register<T: TraceHandler + 'a>(&self, handler: T) -> ();
 }
