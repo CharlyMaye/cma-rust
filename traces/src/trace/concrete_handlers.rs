@@ -8,7 +8,8 @@ impl PrintTraceHandler {
 }
 impl Trace for PrintTraceHandler {
     fn log(&self, level: super::TraceLevel, message: &str) -> () {
-        todo!()
+        let message = format!("{} - {}", level, message);
+        println!("{message}");
     }
 }
 impl TraceHandler for PrintTraceHandler {
@@ -23,7 +24,8 @@ impl FileTraceHanlder {
 }
 impl Trace for FileTraceHanlder {
     fn log(&self, level: super::TraceLevel, message: &str) -> () {
-        todo!()
+        let message = format!("{} - {}", level, message);
+        println!("{message}");
     }
 }
 impl TraceHandler for FileTraceHanlder {

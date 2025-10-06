@@ -31,8 +31,7 @@ impl<'a> Trace for ConcreteTrace<'a> {
         // Appeler tous les handlers enregistrés
         let handlers = self.handlers.lock().unwrap();
         for handler in handlers.iter() {
-            println!("handler");
-            // handler.handle(level, message.as_str());
+            handler.log(level, message.as_str());
         }
     }
 }
