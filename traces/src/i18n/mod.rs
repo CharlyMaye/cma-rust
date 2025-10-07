@@ -6,6 +6,7 @@ use std::error::Error;
 
 #[derive(Debug)]
 pub enum I18nError {
+    NoFile(io::Error),
     IoError(io::Error),
     JSONError(serde_json::Error),
 }
@@ -13,6 +14,7 @@ impl Error for I18nError {}
 impl fmt::Display for I18nError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Self::NoFile(e) => write!(f, "I/O error: {e}"),
             Self::IoError(e) => write!(f, "I/O error: {e}"),
             Self::JSONError(e) => write!(f, "JSON Deserialisation error: {e}"),
         }
@@ -46,7 +48,7 @@ impl I18nState {
         
         let mut file_reader = match File::open(file_name) {
             Ok(content) => content,
-            Err(e) => return  Err(I18nError::IoError(e))
+            Err(e) => return  Err(I18nError::NoFile(e))
         };
 
         match file_reader.read_to_string(&mut file_content) {
