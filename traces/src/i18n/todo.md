@@ -4,14 +4,14 @@
 - [X] Créer le dossier `locales/` à la racine du projet
 - [X] Créer les fichiers JSON de base (`en.json`, `fr.json`)
 - [X] Ajouter des traductions de test dans les fichiers JSON
-- [ ] Ajouter `serde` et `serde_json` dans `Cargo.toml`
+- [X] Ajouter `serde` et `serde_json` dans `Cargo.toml`
 
 ## Phase 2 : Struct I18nState (état interne)
-- [ ] Créer la struct `I18nState` avec :
+- [X] Créer la struct `I18nState` avec :
   - `translations: HashMap<String, HashMap<String, String>>`
   - `current_locale: String`
   - `default_locale: String`
-- [ ] Implémenter `I18nState::new(default_locale: &str)`
+- [X] Implémenter `I18nState::new(default_locale: &str)`
 
 ## Phase 3 : Chargement des traductions
 - [ ] Implémenter `I18nState::load_locale(&mut self, lang: &str) -> Result<(), Error>`
