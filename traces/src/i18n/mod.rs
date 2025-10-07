@@ -7,7 +7,6 @@ pub struct I18nState {
     current_locale: String,
     default_locale: String,
 }
-
 impl I18nState {
     pub fn new(default_locale: &str) -> Self {
         Self {
@@ -18,7 +17,6 @@ impl I18nState {
     }
 }
 impl I18nState {
-
     // TODO - Manage error
     pub fn load_locale(&mut self, lang: &str) {
         let file_name = format!("locales/{lang}.json");
