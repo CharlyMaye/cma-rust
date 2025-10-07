@@ -6,7 +6,7 @@ fn test() {
 }
 fn test_i18n() {
     let mut state: traces::i18n::I18nState = create_i18n("fr");
-    state.load_locale("fr");
+    let _ = state.load_locale("fr");
 }
 fn main() {
     test();

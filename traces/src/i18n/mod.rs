@@ -1,6 +1,29 @@
-use std::{collections::HashMap, fs::File, io::Read};
+use std::{collections::HashMap, fmt, fs::File, io::{self, Read}};
 
 use serde_json::from_str;
+use std::error::Error;
+
+
+#[derive(Debug)]
+pub enum I18nError {
+    IoError(io::Error),
+    JSONError(serde_json::Error),
+}
+impl Error for I18nError {}
+impl fmt::Display for I18nError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::IoError(e) => write!(f, "I/O error: {e}"),
+            Self::JSONError(e) => write!(f, "JSON Deserialisation error: {e}"),
+        }
+    }
+}
+impl From<io::Error> for I18nError {
+    fn from(err: io::Error) -> Self {
+        Self::IoError(err)
+    }
+}
+
 // TODO - trace ?
 pub struct I18nState {
     translations: HashMap<String, HashMap<String, String>>,
@@ -17,16 +40,27 @@ impl I18nState {
     }
 }
 impl I18nState {
-    // TODO - Manage error
-    pub fn load_locale(&mut self, lang: &str) {
+    pub fn load_locale(&mut self, lang: &str) -> Result<(), I18nError> {
         let file_name = format!("locales/{lang}.json");
         let mut file_content = String::new();
         
-        let mut file_reader = File::open(file_name).unwrap();
-        file_reader.read_to_string(&mut file_content).unwrap();
+        let mut file_reader = match File::open(file_name) {
+            Ok(content) => content,
+            Err(e) => return  Err(I18nError::IoError(e))
+        };
+
+        match file_reader.read_to_string(&mut file_content) {
+            Ok(_) => (),
+            Err(e) => return  Err(I18nError::IoError(e)) 
+        };
         
-        let value: HashMap<String, String> = from_str(&file_content).unwrap();
+        let value: HashMap<String, String> = match from_str(&file_content) {
+            Ok(value) => value,
+            Err(e) => return Err(I18nError::JSONError(e))
+        };
         self.translations.insert(lang.to_string(), value);
+
+        Ok(())
     }
 }
 
