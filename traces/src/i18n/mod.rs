@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fs::File, io::Read};
 
 use serde_json::from_str;
-
+// TODO - trace ?
 pub struct I18nState {
     translations: HashMap<String, HashMap<String, String>>,
     current_locale: String,
