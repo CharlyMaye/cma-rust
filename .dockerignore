@@ -1,0 +1,28 @@
+# Rust build artifacts
+target/
+**/*.rs.bk
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Dev container
+.devcontainer/
+
+# Documentation
+docs/
+
+# Logs
+*.log
+traces/
+
+# OS files
+.DS_Store
+Thumbs.db

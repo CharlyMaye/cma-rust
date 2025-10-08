@@ -1,0 +1,3 @@
+[workspace]
+members = ["loggerd", "rustlings", "traces", "translation-lib", "waydash"]
+resolver = "2"
