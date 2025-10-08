@@ -5,7 +5,7 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "waydash",
         options,
-        Box::new(|_cc| Ok(Box::new(App::default()))), // <- Ok(...)
+        Box::new(|_cc| Ok(Box::new(App))), // <- Ok(...)
     )
 }
 

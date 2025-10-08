@@ -1,4 +1,7 @@
-use traces::{i18n::create_i18n, trace::{create_trace, Trace, TraceLevel}};
+use traces::{
+    i18n::create_i18n,
+    trace::{Trace, TraceLevel, create_trace},
+};
 
 fn test() {
     let trace = create_trace().unwrap();
@@ -18,6 +21,5 @@ mod tests {
     // use super::*;
 
     #[test]
-    fn test_log() {
-    }
+    fn test_log() {}
 }

@@ -3,12 +3,14 @@ struct ColorRegularStruct {
     // What types should the fields have? What are the minimum and maximum values for RGB colors?
     red: i32,
     green: i32,
-    blue:i32
+    blue: i32,
 }
 
 struct ColorTupleStruct(
     /* TODO: Add the fields that the test `tuple_structs` expects */
-    i32,i32,i32
+    i32,
+    i32,
+    i32,
 );
 
 #[derive(Debug)]
@@ -29,7 +31,7 @@ mod tests {
         let green = ColorRegularStruct {
             red: 0,
             green: 255,
-            blue: 0
+            blue: 0,
         };
 
         assert_eq!(green.red, 0);
@@ -41,7 +43,7 @@ mod tests {
     fn tuple_structs() {
         // TODO: Instantiate a tuple struct.
         // let green =
-        let green = (0, 255, 0); 
+        let green = (0, 255, 0);
 
         assert_eq!(green.0, 0);
         assert_eq!(green.1, 255);

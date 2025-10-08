@@ -1,4 +1,4 @@
-use crate::trace::{handlers::TraceHandler, Trace};
+use crate::trace::{Trace, handlers::TraceHandler};
 
 pub struct PrintTraceHandler {}
 impl PrintTraceHandler {
@@ -7,10 +7,9 @@ impl PrintTraceHandler {
     }
 }
 impl Trace for PrintTraceHandler {
-    fn log(&self, level: super::TraceLevel, message: &str) -> () {
+    fn log(&self, level: super::TraceLevel, message: &str) {
         let message = format!("{} - {}", level, message);
         println!("{message}");
     }
 }
-impl TraceHandler for PrintTraceHandler {
-}
+impl TraceHandler for PrintTraceHandler {}

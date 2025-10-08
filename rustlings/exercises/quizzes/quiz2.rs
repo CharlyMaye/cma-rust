@@ -36,15 +36,15 @@ mod my_module {
                 Command::Trim => {
                     let value = message.trim().to_string();
                     result.push(value);
-                },
+                }
                 Command::Uppercase => {
                     let value = message.to_uppercase();
                     result.push(value);
-                },
+                }
                 Command::Append(size) => {
                     let value = message + &"bar".repeat(size);
                     result.push(value);
-                },
+                }
             }
         }
         result

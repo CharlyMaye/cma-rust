@@ -1,5 +1,3 @@
-use std::fmt::Error;
-
 // TODO: This function refuses to generate text to be printed on a nametag if
 // you pass it an empty string. It'd be nicer if it explained what the problem
 // was instead of just returning `None`. Thankfully, Rust has a similar
@@ -9,7 +7,7 @@ use std::fmt::Error;
 fn generate_nametag_text(name: String) -> Result<String, String> {
     if name.is_empty() {
         // Empty names aren't allowed
-        Err(format!("Empty names aren't allowed"))
+        Err("Empty names aren't allowed".to_string())
     } else {
         Ok(format!("Hi! My name is {name}"))
     }

@@ -32,7 +32,7 @@ fn main() {
         // TODO: Define `child_numbers` using `shared_numbers`.
         // let child_numbers = ???;
         let child_numbers = Arc::clone(&shared_numbers);
-        
+
         let handle = thread::spawn(move || {
             let sum: u32 = child_numbers.iter().filter(|&&n| n % 8 == offset).sum();
             println!("Sum of offset {offset} is {sum}");
