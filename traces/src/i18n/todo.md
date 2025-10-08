@@ -14,7 +14,7 @@
 - [X] Implémenter `I18nState::new(default_locale: &str)`
 
 ## Phase 3 : Chargement des traductions
-- [ ] Implémenter `I18nState::load_locale(&mut self, lang: &str) -> Result<(), Error>`
+- [X] Implémenter `I18nState::load_locale(&mut self, lang: &str) -> Result<(), Error>`
   - Lire le fichier JSON depuis `locales/{lang}.json`
   - Parser avec `serde_json`
   - Stocker dans `translations`
