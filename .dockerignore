@@ -19,9 +19,9 @@ target/
 # Documentation
 docs/
 
-# Logs
-*.log
-traces/*.log
+# Logs (be specific to avoid matching Cargo.lock)
+**/*.log
+!Cargo.lock
 
 # OS files
 .DS_Store
