@@ -31,26 +31,24 @@ jobs:
           file: docker/ci.Dockerfile
           target: builder
           push: false
-          tags: cma-rust-builder:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          load: true
+          tags: cma-rust-builder:latest
       
-      # Extraire les binaires directement du stage builder
-      - name: Extract binaries from builder stage
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/ci.Dockerfile
-          target: builder
-          outputs: type=local,dest=./artifacts
-          cache-from: type=gha
-      
-      - name: List extracted files
+      # Extraire les binaires depuis le conteneur
+      - name: Extract binaries
         run: |
-          echo "📦 Binaires extraits du stage builder:"
-          find artifacts -name "loggerd" -o -name "waydash" -o -name "traces"
+          # Créer un conteneur depuis l'image builder
+          docker create --name temp cma-rust-builder:latest
+          
+          # Extraire les binaires
           mkdir -p binaries
-          find artifacts/build/target/release -maxdepth 1 -type f -executable -exec cp {} binaries/ \;
+          docker cp temp:/build/target/release/loggerd binaries/ || echo "loggerd not found"
+          docker cp temp:/build/target/release/waydash binaries/ || echo "waydash not found"
+          
+          # Nettoyer
+          docker rm temp
+          
+          # Afficher
           ls -lh binaries/
       
       - name: Upload binaries
@@ -61,7 +59,7 @@ jobs:
           path: binaries/*
           retention-days: 30
       
-      # Build images runtime (optionnel, si vous voulez les images Docker)
+      # Build images runtime (optionnel)
       - name: Build loggerd runtime image
         if: success()
         uses: docker/build-push-action@v5
@@ -70,8 +68,8 @@ jobs:
           file: docker/ci.Dockerfile
           target: loggerd-runtime
           push: false
-          tags: cma-rust-loggerd:${{ github.sha }}
-          cache-from: type=gha
+          load: true
+          tags: cma-rust-loggerd:latest
       
       - name: Build waydash runtime image
         if: success()
@@ -81,8 +79,8 @@ jobs:
           file: docker/ci.Dockerfile
           target: waydash-runtime
           push: false
-          tags: cma-rust-waydash:${{ github.sha }}
-          cache-from: type=gha
+          load: true
+          tags: cma-rust-waydash:latest
       
       - name: Summary
         if: always()
@@ -96,5 +94,5 @@ jobs:
           echo "- ✅ \`cargo build --release\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Images générées :" >> $GITHUB_STEP_SUMMARY
-          echo "- 📦 \`cma-rust-loggerd:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- 📦 \`cma-rust-waydash:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 \`cma-rust-loggerd:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 \`cma-rust-waydash:latest\`" >> $GITHUB_STEP_SUMMARY

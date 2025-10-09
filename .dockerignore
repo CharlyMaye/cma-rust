@@ -21,7 +21,7 @@ docs/
 
 # Logs
 *.log
-traces/
+traces/*.log
 
 # OS files
 .DS_Store
