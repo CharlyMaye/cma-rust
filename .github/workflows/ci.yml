@@ -7,207 +7,94 @@ on:
     branches: [ main, develop ]
 
 env:
-  CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
+  DOCKER_BUILDKIT: 1
 
 jobs:
-  # Job 1: Vérification du formatage
-  format:
-    name: Format Check
+  # Job unique : Le Dockerfile fait TOUT (fmt, clippy, test, build)
+  docker-ci:
+    name: Docker CI
     runs-on: ubuntu-24.04
+    
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-      
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-
-  # Job 2: Clippy (linter)
-  clippy:
-    name: Clippy
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            pkg-config \
-            libssl-dev \
-            libwayland-dev \
-            wayland-protocols \
-            libxkbcommon-dev \
-            libx11-dev \
-            libxcursor-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libgl1-mesa-dev \
-            libegl1-mesa-dev \
-            libudev-dev \
-            libdbus-1-dev
-      
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-      
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-  # Job 3: Tests
-  test:
-    name: Tests
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            pkg-config \
-            libssl-dev \
-            libwayland-dev \
-            wayland-protocols \
-            libxkbcommon-dev \
-            libx11-dev \
-            libxcursor-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libgl1-mesa-dev \
-            libegl1-mesa-dev \
-            libudev-dev \
-            libdbus-1-dev
-      
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Run tests
-        run: cargo test --all --verbose
-
-  # Job 4: Build Release
-  build:
-    name: Build Release
-    runs-on: ubuntu-24.04
-    needs: [format, clippy, test]
-    strategy:
-      matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            pkg-config \
-            libssl-dev \
-            libwayland-dev \
-            wayland-protocols \
-            libxkbcommon-dev \
-            libx11-dev \
-            libxcursor-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libgl1-mesa-dev \
-            libegl1-mesa-dev \
-            libudev-dev \
-            libdbus-1-dev
-      
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Build release
-        run: cargo build --release --all --target ${{ matrix.target }}
-      
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: binaries-${{ matrix.target }}
-          path: |
-            target/${{ matrix.target }}/release/loggerd
-            target/${{ matrix.target }}/release/waydash
-          if-no-files-found: warn
-
-  # Job 5: Docker Build (optionnel)
-  docker:
-    name: Docker Build
-    runs-on: ubuntu-24.04
-    needs: [format, clippy, test]
-    steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
-      - name: Build dev image
+      # Build stage builder : fait fmt + clippy + test + build
+      # Si une étape échoue, le build échoue = CI rouge
+      - name: Build and test (builder stage does everything)
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: docker/dev.Dockerfile
+          file: docker/ci.Dockerfile
+          target: builder
           push: false
-          tags: cma-rust-dev:latest
+          tags: cma-rust-builder:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      
+      # Extraire les binaires directement du stage builder
+      - name: Extract binaries from builder stage
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/ci.Dockerfile
+          target: builder
+          outputs: type=local,dest=./artifacts
+          cache-from: type=gha
+      
+      - name: List extracted files
+        run: |
+          echo "📦 Binaires extraits du stage builder:"
+          find artifacts -name "loggerd" -o -name "waydash" -o -name "traces"
+          mkdir -p binaries
+          find artifacts/build/target/release -maxdepth 1 -type f -executable -exec cp {} binaries/ \;
+          ls -lh binaries/
+      
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: binaries-x86_64
+          path: binaries/*
+          retention-days: 30
+      
+      # Build images runtime (optionnel, si vous voulez les images Docker)
+      - name: Build loggerd runtime image
+        if: success()
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/ci.Dockerfile
+          target: loggerd-runtime
+          push: false
+          tags: cma-rust-loggerd:${{ github.sha }}
+          cache-from: type=gha
+      
+      - name: Build waydash runtime image
+        if: success()
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/ci.Dockerfile
+          target: waydash-runtime
+          push: false
+          tags: cma-rust-waydash:${{ github.sha }}
+          cache-from: type=gha
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 🐳 CI Docker Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Le \`ci.Dockerfile\` a exécuté automatiquement :" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`cargo fmt --check\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`cargo clippy -- -D warnings\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`cargo test --all\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`cargo build --release\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Images générées :" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 \`cma-rust-loggerd:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 \`cma-rust-waydash:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

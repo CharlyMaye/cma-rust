@@ -63,21 +63,29 @@ make run-waydash
 
 ## 🔄 CI/CD
 
-Le projet utilise GitHub Actions pour automatiser :
-- ✅ Vérification du formatage (`cargo fmt --check`)
-- ✅ Linting avec Clippy (mode strict)
-- ✅ Tests unitaires et d'intégration
-- ✅ Build release pour `x86_64-unknown-linux-gnu`
-- ✅ Build Docker multi-stage
+**🐳 Le CI s'exécute entièrement dans Docker pour garantir la reproductibilité.**
 
-### Simuler le pipeline CI localement
+Le pipeline GitHub Actions utilise `docker/ci.Dockerfile` et automatise :
+- ✅ Vérification du formatage (`cargo fmt --check`)
+- ✅ Linting avec Clippy (mode strict : `-D warnings`)
+- ✅ Tests unitaires et d'intégration
+- ✅ Build release optimisé
+- ✅ Génération des images Docker runtime
+
+### Tester le CI localement
 
 ```bash
-# Execute le pipeline complet en local
+# Avec Docker (identique au CI GitHub)
+make docker-build
+
+# Sans Docker (plus rapide)
 make ci-local
 ```
 
-**Temps d'exécution** : ~2 minutes pour le pipeline complet.
+**Temps d'exécution** :
+- Docker (première fois) : ~8-10 min
+- Docker (avec cache) : ~3-5 min  
+- Local sans Docker : ~2 min
 
 ## 🐳 Docker
 
