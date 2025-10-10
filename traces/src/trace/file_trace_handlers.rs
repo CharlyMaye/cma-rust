@@ -1,8 +1,8 @@
-use crate::trace::{handlers::TraceHandler, Trace};
+use crate::trace::{Trace, handlers::TraceHandler};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{Sender, channel};
 use std::thread;
 
 pub struct FileTraceHanlder {
@@ -15,19 +15,18 @@ impl FileTraceHanlder {
         if doesnot_exist {
             File::create_new(file_path)?;
         }
-        
+
         let (sender, receiver) = channel::<String>();
         let file_path = file_path.to_string();
-        
+
         // Thread dédié pour l'écriture
         thread::spawn(move || {
             let path = Path::new(&file_path);
             let mut file = File::options()
-                .write(true)
                 .append(true)
-                .open(&path)
+                .open(path)
                 .expect("Failed to open log file");
-            
+
             while let Ok(message) = receiver.recv() {
                 if let Err(e) = file.write_all(message.as_bytes()) {
                     eprintln!("Failed to write log: {}", e);
@@ -35,13 +34,13 @@ impl FileTraceHanlder {
                 let _ = file.flush();
             }
         });
-        
+
         Ok(Self { sender })
     }
 }
 
 impl Trace for FileTraceHanlder {
-    fn log(&self, level: super::TraceLevel, message: &str) -> () {
+    fn log(&self, level: super::TraceLevel, message: &str) {
         let message = format!("{} - {}\n", level, message);
         // Envoi non-bloquant vers le thread d'écriture
         let _ = self.sender.send(message);

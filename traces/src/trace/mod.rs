@@ -1,8 +1,9 @@
 mod concrete_trace;
 mod file_trace_handlers;
-mod print_trace_handlers;
 mod handlers;
 mod level;
+mod print_trace_handlers;
+#[allow(clippy::module_inception)]
 mod trace;
 
 use std::io::Error;
@@ -16,7 +17,7 @@ pub use level::TraceLevel;
 pub use trace::Trace;
 
 // TODO - add builder
-pub fn create_trace() ->  Result<impl Trace,Error> {
+pub fn create_trace() -> Result<impl Trace, Error> {
     let trace = ConcreteTrace::new();
 
     let print_handler = PrintTraceHandler::new();

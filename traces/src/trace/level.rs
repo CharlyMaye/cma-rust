@@ -1,4 +1,4 @@
-use std::{fmt::Display};
+use std::fmt::Display;
 
 // L'énuméré est simple (sans données heap) et stocké dans la stack.
 // On utilise Copy au lieu de passer par référence (&TraceLevel) car :

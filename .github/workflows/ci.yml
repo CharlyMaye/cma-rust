@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, 'cma/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  # Job unique : Le Dockerfile fait TOUT (fmt, clippy, test, build)
+  docker-ci:
+    name: Docker CI
+    runs-on: ubuntu-24.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # Build stage builder : fait fmt + clippy + test + build
+      # Si une étape échoue, le build échoue = CI rouge
+      - name: Build and test (builder stage does everything)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/ci.Dockerfile
+          target: builder
+          push: false
+          load: true
+          tags: cma-rust-builder:latest
+      
+      # Extraire les binaires depuis le conteneur
+      - name: Extract binaries
+        run: |
+          # Créer un conteneur depuis l'image builder
+          docker create --name temp cma-rust-builder:latest
+          
+          # Extraire les binaires
+          mkdir -p binaries
+          docker cp temp:/build/target/release/loggerd binaries/ || echo "loggerd not found"
+          docker cp temp:/build/target/release/waydash binaries/ || echo "waydash not found"
+          
+          # Nettoyer
+          docker rm temp
+          
+          # Afficher
+          ls -lh binaries/
+      
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: binaries-x86_64
+          path: binaries/*
+          retention-days: 30
+      
+      # Build images runtime (optionnel)
+      - name: Build loggerd runtime image
+        if: success()
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/ci.Dockerfile
+          target: loggerd-runtime
+          push: false
+          load: true
+          tags: cma-rust-loggerd:latest
+      
+      - name: Build waydash runtime image
+        if: success()
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/ci.Dockerfile
+          target: waydash-runtime
+          push: false
+          load: true
+          tags: cma-rust-waydash:latest
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 🐳 CI Docker Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Le \`ci.Dockerfile\` a exécuté automatiquement :" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`cargo fmt --check\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`cargo clippy -- -D warnings\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`cargo test --all\`" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ \`cargo build --release\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Images générées :" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 \`cma-rust-loggerd:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 \`cma-rust-waydash:latest\`" >> $GITHUB_STEP_SUMMARY
