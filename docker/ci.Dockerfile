@@ -72,7 +72,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN useradd -m -u 1000 loggerd
+RUN useradd -m loggerd
 
 COPY --from=builder /build/target/release/loggerd /usr/local/bin/loggerd
 
@@ -113,7 +113,7 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 # Create non-root user
-RUN useradd -m -u 1000 waydash
+RUN useradd -m waydash
 
 COPY --from=builder /build/target/release/waydash /usr/local/bin/waydash
 
