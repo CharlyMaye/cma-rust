@@ -21,8 +21,7 @@ pub fn create_trace() -> Result<impl Trace, Error> {
     let trace = ConcreteTrace::new();
 
     let print_handler = PrintTraceHandler::new();
-    let file_handler = FileTraceHanlder::new("trace.log")?;
-
+    let file_handler = FileTraceHanlder::new("trace.log")?.start()?;
     trace.register(print_handler);
     trace.register(file_handler);
 
