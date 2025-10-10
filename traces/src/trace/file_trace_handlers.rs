@@ -2,7 +2,7 @@ use crate::trace::{Trace, handlers::TraceHandler};
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::path::Path;
-use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::mpsc::{Receiver, Sender, channel};
 use std::thread::{self, JoinHandle};
 
 #[cfg(unix)]
@@ -30,7 +30,7 @@ impl FileTraceHanlder {
             File::create_new(file_path)?;
         }
 
-        Ok(Self { 
+        Ok(Self {
             sender: None,
             thread_handle: None,
             file_path: file_path.to_string(),
@@ -65,7 +65,7 @@ impl FileTraceHanlder {
             OpenOptions::new()
                 .append(true)
                 .create(true)
-                .mode(0o644)  // rw-r--r-- : propriétaire peut lire/écrire, autres peuvent lire
+                .mode(0o644) // rw-r--r-- : propriétaire peut lire/écrire, autres peuvent lire
                 .open(path)
         }
 
@@ -74,7 +74,7 @@ impl FileTraceHanlder {
             use std::os::windows::fs::OpenOptionsExt;
             const FILE_SHARE_READ: u32 = 0x00000001;
             const FILE_SHARE_WRITE: u32 = 0x00000002;
-            
+
             // Sur Windows, autoriser explicitement le partage en lecture
             OpenOptions::new()
                 .append(true)
@@ -86,17 +86,14 @@ impl FileTraceHanlder {
         #[cfg(not(any(unix, windows)))]
         {
             // Fallback pour autres OS
-            OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open(path)
+            OpenOptions::new().append(true).create(true).open(path)
         }
     }
 
     /// Logique du thread d'écriture (séparée pour la testabilité)
     fn writer_thread(file_path: String, receiver: Receiver<TraceMessage>) {
         let path = Path::new(&file_path);
-        
+
         // Ouvrir en mode append avec partage de lecture explicite
         let mut file = match Self::open_log_file(path) {
             Ok(f) => f,
@@ -146,7 +143,7 @@ impl Drop for FileTraceHanlder {
         if let Some(sender) = &self.sender {
             let _ = sender.send(TraceMessage::Shutdown);
         }
-        
+
         // Attendre que le thread termine proprement
         if let Some(handle) = self.thread_handle.take() {
             let _ = handle.join();
