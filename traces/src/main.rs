@@ -14,8 +14,8 @@ fn test_i18n() {
     let _ = state.load_locale("fr");
 }
 fn main() {
-    // test();
-    // test_i18n();
+    test();
+    test_i18n();
     test_rx();
 }
 

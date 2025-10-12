@@ -14,8 +14,11 @@ use observable::{Observable, Subscribable, Unsubscribable};
 // NOTE: pour exécuter le test dans un contexte synchrone, j'utilise futures::executor::block_on.
 // Ajoute dans Cargo.toml : futures = "0.3"
 pub fn test_rx() {
+    test_new_observable();    
+}
 
-    // teardown async qui réussit
+fn test_new_observable() {
+// teardown async qui réussit
     let mut obs_ok = Observable::<String, String>::with_async_teardown(|obs: Observer<String, String>| async move {
         (obs.next)("Hello from Observable (async)".to_string());
         (obs.complete)();
