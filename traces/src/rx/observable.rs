@@ -1,5 +1,6 @@
 //https://refactoring.guru/design-patterns/observer
 use std::future::Future;
+use std::pin::Pin;
 use std::thread;
 use std::task::{RawWaker, RawWakerVTable, Waker, Context, Poll};
 use std::ptr;
@@ -93,60 +94,64 @@ where
             }
             TeardownLogic::Async(arc_f) => {
                 let f = arc_f.clone();
-                // cloner deux fois : une future reçoit une copie de l'observer,
-                // l'autre clone est utilisé pour propager l'erreur si la future échoue.
                 let cb_for_fut = callbacks.clone();
                 let cb_for_err = callbacks.clone();
 
                 // obtenir la future concrète (boxée par TeardownLogic::from_async)
-                let mut fut = (f)(cb_for_fut);
+                let fut = (f)(cb_for_fut);
 
-                // créer un RawWaker "noop" pour construire un Context nécessaire au poll
-                // no-op RawWaker callbacks (they must have unsafe fn signatures)
-                unsafe fn noop_clone(data: *const ()) -> RawWaker {
-                    RawWaker::new(data, &RAW_WAKER_VTABLE)
-                }
-                unsafe fn noop_wake(_data: *const ()) {}
-                unsafe fn noop_wake_by_ref(_data: *const ()) {}
-                unsafe fn noop_drop(_data: *const ()) {}
-
-                static RAW_WAKER_VTABLE: RawWakerVTable =
-                    RawWakerVTable::new(noop_clone, noop_wake, noop_wake_by_ref, noop_drop);
-
-                // helper that confines the single unsafe needed to create a Waker
-                fn create_noop_waker() -> Waker {
-                    // data pointer is null because our vtable callbacks do not touch it
-                    let raw = RawWaker::new(ptr::null(), &RAW_WAKER_VTABLE);
-                    // this conversion is unsafe per API; keep it localized here
-                    unsafe { Waker::from_raw(raw) }
-                }
-
-                // spawn a thread that polls the future until ready (no external executor)
-                let handle = thread::spawn(move || {
-                    // build a Waker/context
-                    let waker = create_noop_waker();
-                    let mut cx = Context::from_waker(&waker);
-
-                    // poll loop
-                    loop {
-                        match fut.as_mut().poll(&mut cx) {
-                            Poll::Ready(Ok(())) => break,
-                            Poll::Ready(Err(e)) => {
-                                (cb_for_err.error)(e);
-                                break;
-                            }
-                            Poll::Pending => {
-                                // no real wake source; yield to allow other threads to run
-                                std::thread::yield_now();
-                            }
-                        }
-                    }
-
-                    // thread exits -> future driven to completion
-                });
+                // spawn the background driver and return its handle
+                let handle = spawn_driven_future(fut, cb_for_err);
 
                 Unsubscribable::Background(handle)
             }
         }
     }
+}
+
+// no-op RawWaker callbacks (they must have unsafe fn signatures)
+unsafe fn noop_clone(data: *const ()) -> RawWaker {
+    RawWaker::new(data, &RAW_WAKER_VTABLE)
+}
+unsafe fn noop_wake(_data: *const ()) {}
+unsafe fn noop_wake_by_ref(_data: *const ()) {}
+unsafe fn noop_drop(_data: *const ()) {}
+
+static RAW_WAKER_VTABLE: RawWakerVTable =
+    RawWakerVTable::new(noop_clone, noop_wake, noop_wake_by_ref, noop_drop);
+
+// helper that confines the single unsafe needed to create a Waker
+fn create_noop_waker() -> Waker {
+    let raw = RawWaker::new(ptr::null(), &RAW_WAKER_VTABLE);
+    unsafe { Waker::from_raw(raw) }
+}
+
+/// Drive a boxed future to completion on a background thread, using a noop waker.
+/// Returns the JoinHandle so the caller can wait if desired.
+fn spawn_driven_future<TValue, TError>(
+    mut fut: Pin<Box<dyn Future<Output = Result<(), TError>> + Send>>,
+    cb_for_err: Observer<TValue, TError>,
+) -> std::thread::JoinHandle<()>
+where
+    TError: Send + 'static,
+    TValue: 'static,
+    Observer<TValue, TError>: Send + 'static,
+{
+    thread::spawn(move || {
+        let waker = create_noop_waker();
+        let mut cx = Context::from_waker(&waker);
+
+        loop {
+            match fut.as_mut().poll(&mut cx) {
+                Poll::Ready(Ok(())) => break,
+                Poll::Ready(Err(e)) => {
+                    (cb_for_err.error)(e);
+                    break;
+                }
+                Poll::Pending => {
+                    std::thread::yield_now();
+                }
+            }
+        }
+    })
 }
