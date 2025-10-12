@@ -21,11 +21,7 @@ pub fn test_rx() {
 }
 
 fn test_return_value() {
-    let mut obs = Observable::<String, String>::new(|obs: &Observer<String, String>| {
-        (obs.next)("Hello from Observable (sync)".to_string());
-        (obs.complete)();
-        Ok(())
-    });
+    let mut obs = create_sync_observable();
     // use Arc<Mutex<...>> for shared mutable state accessible from the closure
     let value = Arc::new(Mutex::new(String::new()));
     let value_cloned = value.clone();
@@ -45,12 +41,7 @@ fn test_return_value() {
     };
 }
 fn test_new_observable() {
-    let mut obs_ok = Observable::<String, String>::with_async_teardown(|obs: Observer<String, String>| async move {
-        (obs.next)("Hello from Observable (async)".to_string());
-        (obs.complete)();
-        Ok(())
-    });
-
+    let mut obs_ok = create_async_observable();
     match obs_ok.subscribe(
         |v: String| println!("Observer next: {}", v),
         |e: String| println!("Observer error: {}", e),
@@ -58,13 +49,8 @@ fn test_new_observable() {
     ) {
         Unsubscribable::Ready => {}
         Unsubscribable::Pending(fut) => { block_on(fut); }
-    }
-
-    let mut obs_default = Observable::<String, String>::new(|obs: &Observer<String, String>| {
-        (obs.next)("Hello from Observable (sync)".to_string());
-        (obs.complete)();
-        Ok(())
-    });
+    };
+    let mut obs_default = create_sync_observable();
     match obs_default.subscribe(
         |v: String| println!("Observer next: {}", v),
         |e: String| println!("Observer error: {}", e),
@@ -73,18 +59,19 @@ fn test_new_observable() {
         Unsubscribable::Ready => {}
         Unsubscribable::Pending(fut) => { block_on(fut); }
     }
+}
 
-    let mut obs_err = Observable::<String, String>::with_async_teardown(|obs: Observer<String, String>| async move {
-        println!("Async teardown logic executed (err)");
-        (obs.error)("something went wrong".to_string());
-        Err("something went wrong".to_string())
-    });
-    match obs_err.subscribe(
-        |v: String| println!("Observer next: {}", v),
-        |e: String| println!("Observer error: {}", e),
-        || println!("Observer complete"),
-    ) {
-        Unsubscribable::Ready => {}
-        Unsubscribable::Pending(fut) => { block_on(fut); }
-    }
+fn create_sync_observable() -> Observable::<String, String>{
+    Observable::<String, String>::new(|obs: &Observer<String, String>| {
+        (obs.next)("Hello from Observable (sync)".to_string());
+        (obs.complete)();
+        Ok(())
+    })
+}
+fn create_async_observable() -> Observable::<String, String>{
+    Observable::<String, String>::with_async_teardown(|obs: Observer<String, String>| async move {
+        (obs.next)("Hello from Observable (async)".to_string());
+        (obs.complete)();
+        Ok(())
+    })
 }
