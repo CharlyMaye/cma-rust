@@ -52,7 +52,7 @@ pub fn test_rx() {
     obs_ok.subscribe(observer);
 
     // pas de teardown fourni — utilise default_teardown
-    let mut obs_default = Observable::<String, String>::new(None);
+    let mut obs_default = Observable::new(None);
     let observer2 = Observer {
         next: |v: String| println!("Observer next: {}", v),
         error: |e: String| println!("Observer error: {}", e),
@@ -61,7 +61,7 @@ pub fn test_rx() {
     obs_default.subscribe(observer2);
 
     // teardown qui échoue
-    let mut obs_err = Observable::<String, String>::new(Some(|_obs: &Observer<String, String>| {
+    let mut obs_err = Observable::new(Some(|_obs: &Observer<String, String>| {
         println!("Teardown logic executed (err)");
         Err("something went wrong".to_string())
     }));
