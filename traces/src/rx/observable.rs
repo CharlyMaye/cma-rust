@@ -16,10 +16,17 @@ impl Unsubscribable {
 }
 
 pub trait Subscribable<TValue, TError> {
-    fn subscribe(
+    // subscribe prend directement trois closures ; permet d'éviter Arc::new(...) côté appelant.
+    fn subscribe<N, E, C>(
         &mut self,
-        callbacks: Observer<TValue, TError>,
-    ) -> Unsubscribable;
+        next: N,
+        error: E,
+        complete: C,
+    ) -> Unsubscribable
+    where
+        N: Fn(TValue) + Send + Sync + 'static,
+        E: Fn(TError) + Send + Sync + 'static,
+        C: Fn() + Send + Sync + 'static;
 }
 
 pub struct Observable<TValue: 'static, TError: 'static> {
@@ -51,10 +58,24 @@ where
     TValue: 'static + Send,
     TError: 'static + Send,
 {
-    fn subscribe(
+    fn subscribe<N, E, C>(
         &mut self,
-        callbacks: Observer<TValue, TError>,
-    ) -> Unsubscribable {
+        next: N,
+        error: E,
+        complete: C,
+    ) -> Unsubscribable
+    where
+        N: Fn(TValue) + Send + Sync + 'static,
+        E: Fn(TError) + Send + Sync + 'static,
+        C: Fn() + Send + Sync + 'static,
+    {
+        // construire l'observer en interne (pas d'Arc::new nécessaire côté appelant)
+        let callbacks = Observer {
+            next: std::sync::Arc::new(next),
+            error: std::sync::Arc::new(error),
+            complete: std::sync::Arc::new(complete),
+        };
+
         match &self.teardown {
             TeardownLogic::Sync(arc_f) => {
                 let f = arc_f.clone();
