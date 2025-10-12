@@ -1,11 +1,12 @@
 //https://refactoring.guru/design-patterns/observer
 mod block;
 mod observer;
-
+mod observable;
 use block::block_on;
 
 // bring Subscribable (and Unsubscribable) into scope so `.subscribe()` is available
-use observer::{Observable, Observer, Subscribable, Unsubscribable};
+use observer::{Observer};
+use observable::{Observable, Subscribable, Unsubscribable};
 
 // test (exemple d'usage)
 // NOTE: pour exécuter le test dans un contexte synchrone, j'utilise futures::executor::block_on.
