@@ -4,13 +4,13 @@ mod observer;
 mod observable;
 mod teardown;
 
-use block::block_on;
-
 // bring Subscribable (and Unsubscribable) into scope so `.subscribe()` is available
 use observer::{Observer};
 use observable::{Observable, Subscribable, Unsubscribable};
 
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc;
+use std::time::Duration;
 
 // test (exemple d'usage)
 // NOTE: pour exécuter le test dans un contexte synchrone, j'utilise futures::executor::block_on.
@@ -18,6 +18,7 @@ use std::sync::{Arc, Mutex};
 pub fn test_rx() {
     test_new_observable();    
     test_return_value();
+    test_return_value_with_channel();
 }
 
 fn test_return_value() {
@@ -37,9 +38,43 @@ fn test_return_value() {
         || println!("Observer complete"),
     ) {
         Unsubscribable::Ready => {}
-        Unsubscribable::Pending(fut) => { block_on(fut); }
+        Unsubscribable::Background(handle) => {
+            // attendre explicitement si besoin
+            let _ = handle.join();
+        }
     };
 }
+
+fn test_return_value_with_channel() {
+    let mut obs = create_sync_observable();
+
+    // channel pour récupérer la valeur envoyée par le handler
+    let (tx, rx) = mpsc::channel::<String>();
+
+    match obs.subscribe(
+        move |v: String| {
+            // envoi via le channel ; ok pour usage sync ou async (si async, on attend plus bas)
+            let _ = tx.send(v);
+        },
+        |e: String| {
+            eprintln!("Observer error (channel): {}", e);
+        },
+        || println!("Observer complete (channel)"),
+    ) {
+        Unsubscribable::Ready => {}
+        Unsubscribable::Background(handle) => {
+            // la future est démarrée par subscribe ; on peut attendre si on veut.
+            let _ = handle.join();
+        }
+    };
+
+    // On attend au maximum 1s pour éviter blocage indéfini
+    match rx.recv_timeout(Duration::from_secs(1)) {
+        Ok(v) => println!("received via channel: {}", v),
+        Err(e) => eprintln!("no value received from channel: {}", e),
+    }
+}
+
 fn test_new_observable() {
     let mut obs_ok = create_async_observable();
     match obs_ok.subscribe(
@@ -48,7 +83,9 @@ fn test_new_observable() {
         || println!("Observer complete"),
     ) {
         Unsubscribable::Ready => {}
-        Unsubscribable::Pending(fut) => { block_on(fut); }
+        Unsubscribable::Background(handle) => {
+            let _ = handle.join();
+        }
     };
     let mut obs_default = create_sync_observable();
     match obs_default.subscribe(
@@ -57,7 +94,9 @@ fn test_new_observable() {
         || println!("Observer complete"),
     ) {
         Unsubscribable::Ready => {}
-        Unsubscribable::Pending(fut) => { block_on(fut); }
+        Unsubscribable::Background(handle) => {
+            let _ = handle.join();
+        }
     }
 }
 

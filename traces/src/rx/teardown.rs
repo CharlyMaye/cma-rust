@@ -1,36 +1,40 @@
 //https://refactoring.guru/design-patterns/observer
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
+use std::pin::Pin;
+use std::future::Future;
 
 use crate::rx::observer::Observer;
 
-// Teardown renvoie un Future boxed (pour la voie async)
-pub type TeardownFuture<TError> =
-    Pin<Box<dyn Future<Output = Result<(), TError>> + Send + 'static>>;
-
-// TeardownLogic peut être sync ou async ; on stocke les closures dans Arc pour pouvoir
-// cloner et déplacer dans un futur sans emprunts portant sur `self`.
-#[derive(Clone)]
-pub enum TeardownLogic<TValue: 'static, TError: 'static> {
-    // Sync prend une référence à l'Observer — évite de déplacer `callbacks` pour le chemin sync
+pub enum TeardownLogic<TValue, TError> {
+    /// Exécution synchrone : la closure prend `&Observer` et retourne un Result.
     Sync(Arc<dyn Fn(&Observer<TValue, TError>) -> Result<(), TError> + Send + Sync + 'static>),
-    // Async prend l'Observer par valeur (sera déplacé dans la future)
-    Async(Arc<dyn Fn(Observer<TValue, TError>) -> TeardownFuture<TError> + Send + Sync + 'static>),
-}
-impl<TValue: 'static, TError: 'static> TeardownLogic<TValue, TError> {
-    pub fn from_async<F, Fut>(f: F) -> Self
-    where
-        F: Fn(Observer<TValue, TError>) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Result<(), TError>> + Send + 'static,
-    {
-        TeardownLogic::Async(Arc::new(move |obs| Box::pin(f(obs))))
-    }
 
+    /// Exécution asynchrone : la closure prend un Observer (par valeur) et retourne une Future.
+    /// La future est boxée et devra être conduite par subscribe() (ici on la drive dans un thread).
+    Async(Arc<
+        dyn Fn(Observer<TValue, TError>) -> Pin<Box<dyn Future<Output = Result<(), TError>> + Send>>
+            + Send
+            + Sync
+            + 'static,
+    >),
+}
+
+impl<TValue, TError> TeardownLogic<TValue, TError> {
     pub fn from_sync<F>(f: F) -> Self
     where
         F: Fn(&Observer<TValue, TError>) -> Result<(), TError> + Send + Sync + 'static,
     {
         TeardownLogic::Sync(Arc::new(f))
+    }
+
+    pub fn from_async<F, Fut>(f: F) -> Self
+    where
+        F: Fn(Observer<TValue, TError>) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<(), TError>> + Send + 'static,
+    {
+        let wrapper = move |obs: Observer<TValue, TError>| -> Pin<Box<dyn Future<Output = Result<(), TError>> + Send>> {
+            Box::pin(f(obs))
+        };
+        TeardownLogic::Async(Arc::new(wrapper))
     }
 }
