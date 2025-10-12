@@ -2,6 +2,8 @@
 mod block;
 mod observer;
 mod observable;
+mod teardown;
+
 use block::block_on;
 
 // bring Subscribable (and Unsubscribable) into scope so `.subscribe()` is available
