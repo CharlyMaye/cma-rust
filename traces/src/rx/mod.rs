@@ -1,5 +1,4 @@
 //https://refactoring.guru/design-patterns/observer
-mod block;
 mod observer;
 mod observable;
 mod teardown;
