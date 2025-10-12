@@ -29,7 +29,7 @@ pub fn test_rx() {
     };
 
     // subscribe retourne Unsubscribable — on attend le futur uniquement s'il existe
-    match obs_ok.subscribe(observer.clone()) {
+    match obs_ok.subscribe(observer) {
         Unsubscribable::Ready => {}
         Unsubscribable::Pending(fut) => { block_on(fut); }
     }
