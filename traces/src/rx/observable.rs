@@ -4,6 +4,7 @@ use std::pin::Pin;
 use std::thread;
 use std::task::{RawWaker, RawWakerVTable, Waker, Context, Poll};
 use std::ptr;
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 
 use crate::rx::observer::Observer;
 use crate::rx::teardown::TeardownLogic;
@@ -11,12 +12,72 @@ use crate::rx::teardown::TeardownLogic;
 // TODO - on gère du unsafe nous même. Il est peut être préférable d'utiliser futures
 
 // Unsubscribable indique si l'opération est déjà terminée (sync) ou si elle
-// est lancée en arrière-plan (async). Le caller peut décider d'attendre via JoinHandle.
-pub enum Unsubscribable {
-    Ready,
-    Background(std::thread::JoinHandle<()>),
+// est lancée en arrière-plan (async). On utilise une struct contenant Option<JoinHandle>
+// pour pouvoir prendre le handle (Option::take) sans déplacer un champ d'un type qui
+// implémente Drop (évite l'erreur "cannot move out of type ... which implements Drop").
+pub struct Unsubscribable {
+    handle: Option<std::thread::JoinHandle<()>>,
+    active: Arc<AtomicBool>,
 }
-impl Unsubscribable {}
+
+impl Unsubscribable {
+    pub fn ready() -> Self {
+        Unsubscribable {
+            handle: None,
+            active: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    pub fn background(handle: std::thread::JoinHandle<()>, active: Arc<AtomicBool>) -> Self {
+        Unsubscribable {
+            handle: Some(handle),
+            active,
+        }
+    }
+
+    /// Stop further callbacks immediately (non-blocking). The background thread may still run;
+    /// callbacks are ignored because `active` is set to false.
+    pub fn unsubscribe(&mut self) {
+        self.active.store(false, Ordering::SeqCst);
+    }
+
+    /// Stop callbacks and wait for background task to finish (blocks).
+    pub fn unsubscribe_and_wait(&mut self) -> std::thread::Result<()> {
+        self.active.store(false, Ordering::SeqCst);
+        self.join()
+    }
+
+    /// Wait for background task to finish (if any).
+    pub fn join(&mut self) -> std::thread::Result<()> {
+        if let Some(h) = self.handle.take() {
+            h.join()
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Detach: join in a spawned thread so this call is non-blocking.
+    pub fn detach(&mut self) {
+        if let Some(h) = self.handle.take() {
+            std::thread::spawn(move || {
+                let _ = h.join();
+            });
+        }
+    }
+}
+
+impl Drop for Unsubscribable {
+    fn drop(&mut self) {
+        // ensure callbacks are disabled on drop
+        self.active.store(false, Ordering::SeqCst);
+        if let Some(h) = self.handle.take() {
+            // don't block Drop: detach the join
+            std::thread::spawn(move || {
+                let _ = h.join();
+            });
+        }
+    }
+}
 
 pub trait Subscribable<TValue, TError> {
     // subscribe prend directement trois closures ; permet d'éviter Arc::new(...) côté appelant.
@@ -74,28 +135,102 @@ where
         E: Fn(TError) + Send + Sync + 'static,
         C: Fn() + Send + Sync + 'static,
     {
-        // construire l'observer en interne (pas d'Arc::new nécessaire côté appelant)
-        let callbacks = Observer {
-            next: std::sync::Arc::new(next),
-            error: std::sync::Arc::new(error),
-            complete: std::sync::Arc::new(complete),
-        };
+        // les Observer/wrappers (avec `active`) sont créés dans chaque branche (Sync/Async)
+        // on n'instancie pas `callbacks` ici pour éviter d'oublier le champ `active`
 
         match &self.teardown {
             TeardownLogic::Sync(arc_f) => {
                 let f = arc_f.clone();
+                // create active flag true for sync as well (but will be used only if needed)
+                let active = Arc::new(AtomicBool::new(true));
+                let active_next = Arc::clone(&active);
+                let active_err = Arc::clone(&active);
+                let active_complete = Arc::clone(&active);
+
+                let user_next = std::sync::Arc::new(next);
+                let user_err = std::sync::Arc::new(error);
+                let user_complete = std::sync::Arc::new(complete);
+
+                let callbacks = Observer {
+                    next: {
+                        let u = Arc::clone(&user_next);
+                        Arc::new(move |v| {
+                            if active_next.load(Ordering::SeqCst) {
+                                (u)(v)
+                            }
+                        })
+                    },
+                    error: {
+                        let u = Arc::clone(&user_err);
+                        Arc::new(move |e| {
+                            if active_err.load(Ordering::SeqCst) {
+                                (u)(e)
+                            }
+                        })
+                    },
+                    complete: {
+                        let u = Arc::clone(&user_complete);
+                        Arc::new(move || {
+                            if active_complete.load(Ordering::SeqCst) {
+                                (u)()
+                            }
+                        })
+                    },
+                    active: Arc::clone(&active),
+                };
+
                 match (f)(&callbacks) {
-                    Ok(()) => Unsubscribable::Ready,
+                    Ok(()) => Unsubscribable::ready(),
                     Err(e) => {
                         (callbacks.error)(e);
-                        Unsubscribable::Ready
+                        Unsubscribable::ready()
                     }
                 }
             }
             TeardownLogic::Async(arc_f) => {
                 let f = arc_f.clone();
-                let cb_for_fut = callbacks.clone();
-                let cb_for_err = callbacks.clone();
+
+                // prepare active flag shared between observer wrappers and Unsubscribable
+                let active = Arc::new(AtomicBool::new(true));
+                let active_next = Arc::clone(&active);
+                let active_err = Arc::clone(&active);
+                let active_complete = Arc::clone(&active);
+
+                let user_next = std::sync::Arc::new(next);
+                let user_err = std::sync::Arc::new(error);
+                let user_complete = std::sync::Arc::new(complete);
+
+                // Observer whose callbacks check `active` before invoking user closures
+                let cb_for_fut = Observer {
+                    next: {
+                        let u = Arc::clone(&user_next);
+                        Arc::new(move |v| {
+                            if active_next.load(Ordering::SeqCst) {
+                                (u)(v)
+                            }
+                        })
+                    },
+                    error: {
+                        let u = Arc::clone(&user_err);
+                        Arc::new(move |e| {
+                            if active_err.load(Ordering::SeqCst) {
+                                (u)(e)
+                            }
+                        })
+                    },
+                    complete: {
+                        let u = Arc::clone(&user_complete);
+                        Arc::new(move || {
+                            if active_complete.load(Ordering::SeqCst) {
+                                (u)()
+                            }
+                        })
+                    },
+                    active: Arc::clone(&active),
+                };
+
+                // second clone to be used only for error propagation by the driver
+                let cb_for_err = cb_for_fut.clone();
 
                 // obtenir la future concrète (boxée par TeardownLogic::from_async)
                 let fut = (f)(cb_for_fut);
@@ -103,7 +238,7 @@ where
                 // spawn the background driver and return its handle
                 let handle = spawn_driven_future(fut, cb_for_err);
 
-                Unsubscribable::Background(handle)
+                Unsubscribable::background(handle, active)
             }
         }
     }
