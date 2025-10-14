@@ -13,8 +13,11 @@
 //! use loggerd::trace::file::FileTraceHandler;
 //! use loggerd::trace::{Trace, TraceLevel};
 //!
+//! # fn main() -> Result<(), std::io::Error> {
 //! let handler = FileTraceHandler::new("app.log")?.start()?;
 //! handler.log(TraceLevel::Info, "Application started");
+//! # Ok(())
+//! # }
 //! ```
 
 mod file_opener;

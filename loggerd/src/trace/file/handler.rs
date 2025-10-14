@@ -21,11 +21,14 @@ use std::thread::{self, JoinHandle};
 /// ```no_run
 /// use loggerd::trace::file::FileTraceHandler;
 ///
+/// # fn main() -> Result<(), std::io::Error> {
 /// // Configuration par défaut (10 MB, 5 backups)
 /// let handler = FileTraceHandler::new("app.log")?.start()?;
 ///
 /// // Configuration personnalisée
 /// let handler = FileTraceHandler::with_rotation("app.log", 5 * 1024 * 1024, 3)?.start()?;
+/// # Ok(())
+/// # }
 /// ```
 pub struct FileTraceHandler {
     sender: Option<Sender<TraceMessage>>,
@@ -85,7 +88,12 @@ impl FileTraceHandler {
     /// # Exemples
     ///
     /// ```no_run
+    /// use loggerd::trace::file::FileTraceHandler;
+    ///
+    /// # fn main() -> Result<(), std::io::Error> {
     /// let handler = FileTraceHandler::new("app.log")?.start()?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn start(mut self) -> Result<Self, std::io::Error> {
         if self.sender.is_some() {
