@@ -120,10 +120,22 @@ install: release ## Installe les binaires dans ~/.cargo/bin
 	cargo install --path waydash
 
 run-loggerd: ## Execute loggerd en mode debug
-	cargo run --bin loggerd
+	cargo run --package loggerd
 
 run-waydash: ## Execute waydash en mode debug
 	cargo run --bin waydash
+
+test-loggerd: ## Execute le script de test automatique pour loggerd
+	@./loggerd/test.sh
+
+health-check: ## Test rapide de l'endpoint /health
+	@curl -s http://localhost:8080/health && echo ""
+
+metrics: ## Affiche les métriques actuelles
+	@curl -s http://localhost:8080/metrics | python3 -m json.tool 2>/dev/null || curl -s http://localhost:8080/metrics
+
+stop-loggerd: ## Arrête proprement loggerd avec SIGTERM
+	@pkill -TERM -f "target/debug/loggerd" && echo "✅ SIGTERM envoyé" || echo "ℹ️  Aucun processus loggerd trouvé"
 
 # ==============================================================================
 # Outils de développement

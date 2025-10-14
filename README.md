@@ -12,11 +12,11 @@ Ce workspace contient plusieurs crates Rust :
 
 | Crate | Description | Statut |
 |-------|-------------|--------|
-| **loggerd** | Démon système de logging avec API REST | 🚧 En cours |
-| **waydash** | Dashboard Wayland pour afficher les métriques | 🚧 En cours |
+| **loggerd** | Démon système de logging avec rotation + API REST | ✅ Fonctionnel |
+| **waydash** | Dashboard Wayland pour afficher les métriques | 🚧 Planifié |
 | **translation-lib** | Bibliothèque i18n pour Rust | 📦 À publier |
-| **traces** | Bibliothèque de logging custom | ✅ Complet |
-| **rustlings** | Exercices Rust | 🎓 Apprentissage |
+| **traces** | Bibliothèque de logging personnalisée avec Rx patterns | 🎓 En cours |
+| **rustlings** | Exercices Rust (apprentissage) | 🎓 En cours |
 
 ## 🚀 Quick Start
 
@@ -57,8 +57,15 @@ make release
 # Démon loggerd (API REST sur port 8080)
 make run-loggerd
 
+# Tester les endpoints
+make health-check    # GET /health
+make metrics         # GET /metrics (JSON)
+
+# Arrêter proprement loggerd
+make stop-loggerd    # Envoie SIGTERM (graceful shutdown)
+
 # Dashboard waydash (interface graphique Wayland)
-make run-waydash
+make run-waydash     # À venir (Semaine 4)
 ```
 
 ## 🔄 CI/CD
@@ -167,8 +174,24 @@ make install            # Installer dans ~/.cargo/bin
 - [x] Makefile pour automatisation
 - [x] Documentation CI/CD
 
+### Semaine 2 : Daemon Rust (loggerd) ✅
+- [x] Binaire loggerd avec API HTTP (Axum)
+- [x] Endpoints `/health` et `/metrics`
+- [x] Système de traces personnalisé (console + fichier)
+- [x] Rotation automatique des logs (par taille + timestamp)
+- [x] Gestion des signaux Unix (SIGTERM, SIGHUP)
+- [x] Graceful shutdown
+- [x] Compteur de logs thread-safe (AtomicU64)
+- [x] Refactoring modulaire (SRP, Clean Architecture)
+- [x] Documentation complète avec doctests
+- [x] Fichier systemd unit
+
+**Documentation** :
+- [Récapitulatif Semaine 2](docs/semaine2-recap.md)
+- [Architecture du module file](docs/architecture-file-module.md)
+- [Refactoring file_trace_handlers](docs/refactoring-file-handler.md)
+
 ### Semaines suivantes
-- [ ] Semaine 2 : Daemon Rust (loggerd) avec systemd
 - [ ] Semaine 3 : Packaging Ubuntu (Snapcraft)
 - [ ] Semaine 4 : UI Wayland (xdg-shell)
 - [ ] Semaine 5 : UI avancée (layer-shell)
