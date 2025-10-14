@@ -1,10 +1,10 @@
 use super::file_opener::open_log_file;
-use super::rotation::{rotate_log_files, RotationConfig};
+use super::rotation::{RotationConfig, rotate_log_files};
 use std::io::Write;
 use std::path::Path;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::Receiver;
-use std::sync::Arc;
 
 /// Messages envoyés au thread d'écriture
 pub enum TraceMessage {

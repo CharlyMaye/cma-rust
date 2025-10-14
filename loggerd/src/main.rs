@@ -1,11 +1,11 @@
-use axum::{extract::State, routing::get, Json, Router};
+use axum::{Json, Router, extract::State, routing::get};
 use serde_json::json;
 use std::net::SocketAddr;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 use tokio::net::TcpListener;
-use tokio::signal::unix::{signal, SignalKind};
+use tokio::signal::unix::{SignalKind, signal};
 
 mod trace;
 use trace::{Trace, TraceLevel};
@@ -26,9 +26,10 @@ struct MetricsState {
 #[tokio::main]
 async fn main() {
     // Initialisation du système de traces (console + fichier avec rotation)
-    let (trace_system, log_count) = trace::create_trace().expect("Failed to initialize trace system");
+    let (trace_system, log_count) =
+        trace::create_trace().expect("Failed to initialize trace system");
     let trace_arc: Arc<dyn Trace + Send + Sync> = Arc::new(trace_system);
-    
+
     trace_arc.log(TraceLevel::Info, "Initializing loggerd daemon...");
 
     // État partagé pour les métriques
@@ -50,7 +51,7 @@ async fn main() {
     // Bind TCP
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     let listener = TcpListener::bind(addr).await.unwrap();
-    
+
     let msg = format!(
         "loggerd started on http://{}/ (GET /health, /metrics)",
         listener.local_addr().unwrap()
@@ -63,7 +64,9 @@ async fn main() {
         .await
         .unwrap();
 
-    state.trace.log(TraceLevel::Info, "loggerd shutdown complete");
+    state
+        .trace
+        .log(TraceLevel::Info, "loggerd shutdown complete");
 }
 
 /// Handler pour /health

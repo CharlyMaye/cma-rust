@@ -24,7 +24,7 @@ pub fn create_trace() -> Result<(impl Trace + Send + Sync, Arc<AtomicU64>), Erro
     let print_handler = PrintTraceHandler::new();
     let file_handler = file::FileTraceHandler::new("loggerd.log")?.start()?;
     let log_counter = file_handler.log_counter();
-    
+
     trace.register(print_handler);
     trace.register(file_handler);
 

@@ -1,6 +1,6 @@
 //https://refactoring.guru/design-patterns/observer
-use std::sync::{Arc, atomic::AtomicBool};
 use std::sync::atomic::Ordering;
+use std::sync::{Arc, atomic::AtomicBool};
 
 pub struct Observer<TValue, TError> {
     // closures "wrappées" : elles vérifient le flag `active` avant d'appeler la closure utilisateur

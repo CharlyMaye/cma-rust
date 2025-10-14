@@ -1,10 +1,13 @@
 //https://refactoring.guru/design-patterns/observer
 use std::future::Future;
 use std::pin::Pin;
-use std::thread;
-use std::task::{RawWaker, RawWakerVTable, Waker, Context, Poll};
 use std::ptr;
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
+use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+use std::thread;
 
 use crate::rx::observer::Observer;
 use crate::rx::teardown::TeardownLogic;
@@ -81,12 +84,7 @@ impl Drop for Unsubscribable {
 
 pub trait Subscribable<TValue, TError> {
     // subscribe prend directement trois closures ; permet d'éviter Arc::new(...) côté appelant.
-    fn subscribe<N, E, C>(
-        &mut self,
-        next: N,
-        error: E,
-        complete: C,
-    ) -> Unsubscribable
+    fn subscribe<N, E, C>(&mut self, next: N, error: E, complete: C) -> Unsubscribable
     where
         N: Fn(TValue) + Send + Sync + 'static,
         E: Fn(TError) + Send + Sync + 'static,
@@ -124,12 +122,7 @@ where
     TValue: 'static + Send,
     TError: 'static + Send,
 {
-    fn subscribe<N, E, C>(
-        &mut self,
-        next: N,
-        error: E,
-        complete: C,
-    ) -> Unsubscribable
+    fn subscribe<N, E, C>(&mut self, next: N, error: E, complete: C) -> Unsubscribable
     where
         N: Fn(TValue) + Send + Sync + 'static,
         E: Fn(TError) + Send + Sync + 'static,

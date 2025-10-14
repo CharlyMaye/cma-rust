@@ -1,10 +1,10 @@
 use super::rotation::RotationConfig;
-use super::writer::{writer_thread, TraceMessage};
-use crate::trace::{handlers::TraceHandler, Trace, TraceLevel};
+use super::writer::{TraceMessage, writer_thread};
+use crate::trace::{Trace, TraceLevel, handlers::TraceHandler};
 use std::fs::File;
-use std::sync::atomic::AtomicU64;
-use std::sync::mpsc::{channel, Sender};
 use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
+use std::sync::mpsc::{Sender, channel};
 use std::thread::{self, JoinHandle};
 
 /// Handler de traces vers fichier avec rotation automatique
@@ -55,10 +55,7 @@ impl FileTraceHandler {
         max_size_bytes: u64,
         max_backups: usize,
     ) -> Result<Self, std::io::Error> {
-        Self::with_config(
-            file_path,
-            RotationConfig::new(max_size_bytes, max_backups),
-        )
+        Self::with_config(file_path, RotationConfig::new(max_size_bytes, max_backups))
     }
 
     /// Crée un handler avec une configuration complète

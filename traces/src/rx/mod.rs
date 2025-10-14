@@ -1,16 +1,16 @@
 //https://refactoring.guru/design-patterns/observer
-mod observer;
 mod observable;
+mod observer;
 mod teardown;
 
 // bring Subscribable (and Unsubscribable) into scope so `.subscribe()` is available
-use observer::{Observer};
 use observable::{Observable, Subscribable};
+use observer::Observer;
 
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc;
-use std::time::Duration;
 use std::sync::atomic::Ordering;
+use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 // test (exemple d'usage)
 // NOTE: pour exécuter le test dans un contexte synchrone, j'utilise futures::executor::block_on.
@@ -98,7 +98,9 @@ fn test_unsubscribe_examples() {
 
     // démarrer l'observation
     let mut unsub = obs.subscribe(
-        move |v: String| { let _ = tx.send(v); },
+        move |v: String| {
+            let _ = tx.send(v);
+        },
         |e: String| eprintln!("Observer error (example): {}", e),
         || println!("Observer complete (example)"),
     );
@@ -117,22 +119,25 @@ fn test_unsubscribe_examples() {
     }
 
     // --- maintenant démonstration unsubscribe_and_wait ---
-    let mut obs2 = Observable::with_async_teardown(|mut obs: Observer<String, String>| async move {
-        let mut i = 0;
-        while obs.is_active() {
-            println!("background loop (example2) iteration {}", i);
-            (obs.next)(format!("xmsg {}", i));
-            i += 1;
-            std::thread::sleep(Duration::from_millis(30));
-        }
-        (obs.complete)();
-        Ok(())
-    });
+    let mut obs2 =
+        Observable::with_async_teardown(|mut obs: Observer<String, String>| async move {
+            let mut i = 0;
+            while obs.is_active() {
+                println!("background loop (example2) iteration {}", i);
+                (obs.next)(format!("xmsg {}", i));
+                i += 1;
+                std::thread::sleep(Duration::from_millis(30));
+            }
+            (obs.complete)();
+            Ok(())
+        });
 
     let (tx2, rx2) = mpsc::channel::<String>();
 
     let mut unsub2 = obs2.subscribe(
-        move |v: String| { let _ = tx2.send(v); },
+        move |v: String| {
+            let _ = tx2.send(v);
+        },
         |e: String| eprintln!("Observer error (example2): {}", e),
         || println!("Observer complete (example2)"),
     );
@@ -145,14 +150,14 @@ fn test_unsubscribe_examples() {
     println!("unsubscribe_and_wait finished for example2");
 }
 
-fn create_sync_observable() -> Observable::<String, String>{
+fn create_sync_observable() -> Observable<String, String> {
     Observable::<String, String>::new(|obs: &Observer<String, String>| {
         (obs.next)("Hello from Observable (sync)".to_string());
         (obs.complete)();
         Ok(())
     })
 }
-fn create_async_observable() -> Observable::<String, String>{
+fn create_async_observable() -> Observable<String, String> {
     Observable::<String, String>::with_async_teardown(|obs: Observer<String, String>| async move {
         (obs.next)("Hello from Observable (async)".to_string());
         (obs.complete)();
