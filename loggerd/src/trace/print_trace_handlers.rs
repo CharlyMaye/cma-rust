@@ -1,5 +1,6 @@
 use crate::trace::{Trace, handlers::TraceHandler};
 
+/// A simple trace handler that prints log messages to the console.
 pub struct PrintTraceHandler {}
 impl PrintTraceHandler {
     pub fn new() -> Self {
@@ -13,3 +14,7 @@ impl Trace for PrintTraceHandler {
     }
 }
 impl TraceHandler for PrintTraceHandler {}
+
+// PrintTraceHandler est Send + Sync car sans état partagé
+unsafe impl Send for PrintTraceHandler {}
+unsafe impl Sync for PrintTraceHandler {}
