@@ -5,22 +5,24 @@ use std::sync::Arc;
 
 use crate::rx::observer::Observer;
 
+type AsyncTeardownFuture<TError> = Pin<Box<dyn Future<Output = Result<(), TError>> + Send>>;
+type SyncTeardownResult<TError> = Result<(), TError>;
+
+/// Type alias pour une fonction de teardown synchrone
+type SyncTeardownFn<TValue, TError> =
+    Arc<dyn Fn(&Observer<TValue, TError>) -> SyncTeardownResult<TError> + Send + Sync + 'static>;
+
+/// Type alias pour une fonction de teardown asynchrone
+type AsyncTeardownFn<TValue, TError> =
+    Arc<dyn Fn(Observer<TValue, TError>) -> AsyncTeardownFuture<TError> + Send + Sync + 'static>;
+
 pub enum TeardownLogic<TValue, TError> {
     /// Exécution synchrone : la closure prend `&Observer` et retourne un Result.
-    Sync(Arc<dyn Fn(&Observer<TValue, TError>) -> Result<(), TError> + Send + Sync + 'static>),
+    Sync(SyncTeardownFn<TValue, TError>),
 
     /// Exécution asynchrone : la closure prend un Observer (par valeur) et retourne une Future.
     /// La future est boxée et devra être conduite par subscribe() (ici on la drive dans un thread).
-    Async(
-        Arc<
-            dyn Fn(
-                    Observer<TValue, TError>,
-                ) -> Pin<Box<dyn Future<Output = Result<(), TError>> + Send>>
-                + Send
-                + Sync
-                + 'static,
-        >,
-    ),
+    Async(AsyncTeardownFn<TValue, TError>),
 }
 
 impl<TValue, TError> TeardownLogic<TValue, TError> {

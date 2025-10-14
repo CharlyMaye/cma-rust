@@ -50,6 +50,7 @@ impl FileTraceHandler {
     /// * `file_path` - Chemin du fichier de log
     /// * `max_size_bytes` - Taille max avant rotation (en bytes)
     /// * `max_backups` - Nombre max de fichiers de backup
+    #[allow(dead_code)] // API publique pour usage futur
     pub fn with_rotation(
         file_path: &str,
         max_size_bytes: u64,

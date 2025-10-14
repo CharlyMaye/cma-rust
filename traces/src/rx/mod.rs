@@ -7,7 +7,6 @@ mod teardown;
 use observable::{Observable, Subscribable};
 use observer::Observer;
 
-use std::sync::atomic::Ordering;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -81,7 +80,7 @@ fn test_new_observable() {
 
 fn test_unsubscribe_examples() {
     // exemple non‑test unitaire : démontre unsubscribe() et unsubscribe_and_wait()
-    let mut obs = Observable::with_async_teardown(|mut obs: Observer<String, String>| async move {
+    let mut obs = Observable::with_async_teardown(|obs: Observer<String, String>| async move {
         let mut i = 0;
         while obs.is_active() {
             println!("background loop (example) iteration {}", i);
@@ -119,18 +118,17 @@ fn test_unsubscribe_examples() {
     }
 
     // --- maintenant démonstration unsubscribe_and_wait ---
-    let mut obs2 =
-        Observable::with_async_teardown(|mut obs: Observer<String, String>| async move {
-            let mut i = 0;
-            while obs.is_active() {
-                println!("background loop (example2) iteration {}", i);
-                (obs.next)(format!("xmsg {}", i));
-                i += 1;
-                std::thread::sleep(Duration::from_millis(30));
-            }
-            (obs.complete)();
-            Ok(())
-        });
+    let mut obs2 = Observable::with_async_teardown(|obs: Observer<String, String>| async move {
+        let mut i = 0;
+        while obs.is_active() {
+            println!("background loop (example2) iteration {}", i);
+            (obs.next)(format!("xmsg {}", i));
+            i += 1;
+            std::thread::sleep(Duration::from_millis(30));
+        }
+        (obs.complete)();
+        Ok(())
+    });
 
     let (tx2, rx2) = mpsc::channel::<String>();
 

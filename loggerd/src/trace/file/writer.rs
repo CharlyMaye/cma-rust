@@ -44,25 +44,25 @@ pub fn writer_thread(
             Ok(TraceMessage::Log(message)) => {
                 let message_len = message.len() as u64;
 
-                // Vérifier si rotation nécessaire AVANT d'écrire
+                // Vérifier si rotation nécessaire et tenter la rotation
                 if should_rotate(current_size, message_len, config.max_size_bytes) {
-                    if let Err(e) = perform_rotation(
+                    perform_rotation(
                         &mut file,
                         &mut current_size,
                         path,
                         &file_path,
                         config.max_backups,
-                    ) {
+                    )
+                    .unwrap_or_else(|e| {
                         eprintln!("Rotation failed, continuing with current file: {}", e);
                         // Continue avec le fichier actuel même si rotation échoue
-                    }
+                    });
                 }
 
                 // Écrire le message
-                if let Err(e) = write_message(&mut file, &message, message_len, &log_count) {
-                    eprintln!("Failed to write log: {}", e);
-                } else {
-                    current_size += message_len;
+                match write_message(&mut file, &message, message_len, &log_count) {
+                    Ok(()) => current_size += message_len,
+                    Err(e) => eprintln!("Failed to write log: {}", e),
                 }
             }
             Ok(TraceMessage::Shutdown) | Err(_) => {

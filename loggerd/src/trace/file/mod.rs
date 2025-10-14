@@ -24,4 +24,5 @@ mod writer;
 
 // Ré-exports publics
 pub use handler::FileTraceHandler;
-pub use rotation::RotationConfig; // API publique pour config custom
+#[allow(unused_imports)] // API publique pour config custom (future)
+pub use rotation::RotationConfig;

@@ -19,6 +19,7 @@ impl Default for RotationConfig {
 }
 
 impl RotationConfig {
+    #[allow(dead_code)] // API publique pour usage futur
     pub fn new(max_size_bytes: u64, max_backups: usize) -> Self {
         Self {
             max_size_bytes,
