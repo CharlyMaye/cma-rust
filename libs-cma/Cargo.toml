@@ -1,5 +1,5 @@
 [package]
-name = "traces"
+name = "libs-cma"
 version = "0.1.0"
 edition = "2024"
 
