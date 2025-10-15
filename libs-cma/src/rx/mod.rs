@@ -7,8 +7,9 @@ pub fn test_rx() {}
 
 #[cfg(test)]
 mod tests {
-    use super::observable::{Observable, Subscribable};
-    use super::observer::Observer;
+    use super::observable::*;
+    use super::observer::*;
+    use super::*;
     use std::sync::mpsc;
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
@@ -31,6 +32,46 @@ mod tests {
         )
     }
 
+    #[test]
+    fn test_pipe_operators() {
+        use std::sync::{Arc, Mutex};
+
+        let results = Arc::new(Mutex::new(Vec::new()));
+        let results_clone = Arc::clone(&results);
+
+        // Rien ne s'exécute ici - on construit juste la chaîne
+        let mut observable: Observable<i32, ()> = Observable::new(|observer| {
+            println!("Source exécutée !");
+            (observer.next)(1);
+            (observer.next)(2);
+            (observer.next)(3);
+            (observer.next)(4);
+            (observer.next)(5);
+            (observer.complete)();
+            Ok(())
+        })
+        .map(|x| {
+            println!("Map: {} -> {}", x, x * 2);
+            x * 2
+        });
+
+        println!("Avant subscribe - rien ne s'est exécuté encore");
+
+        // TOUT s'exécute maintenant
+        let mut sub = observable.subscribe(
+            move |x| {
+                println!("Reçu: {}", x);
+                results_clone.lock().unwrap().push(x);
+            },
+            |e| eprintln!("Erreur: {:?}", e),
+            || println!("Complété"),
+        );
+
+        sub.join().unwrap();
+
+        let final_results = results.lock().unwrap();
+        assert_eq!(*final_results, vec![2, 4, 6, 8, 10]);
+    }
     #[test]
     fn test_sync_observable_with_mutex() {
         let mut obs = create_sync_observable();

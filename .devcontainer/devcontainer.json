@@ -12,7 +12,8 @@
 				"tamasfe.even-better-toml",
 				"serayuzgur.crates",
 				"mhutchie.git-graph",
-				"usernamehw.errorlens"
+				"usernamehw.errorlens",
+				"vadimcn.vscode-lldb"
 			]
 		}
 	},

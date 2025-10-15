@@ -25,6 +25,14 @@ pub enum TeardownLogic<TValue, TError> {
     Async(AsyncTeardownFn<TValue, TError>),
 }
 
+impl<TValue, TError> std::fmt::Debug for TeardownLogic<TValue, TError> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Sync(_) => write!(f, "TeardownLogic::Sync"),
+            Self::Async(_) => write!(f, "TeardownLogic::Async"),
+        }
+    }
+}
 impl<TValue, TError> TeardownLogic<TValue, TError> {
     pub fn from_sync<F>(f: F) -> Self
     where
