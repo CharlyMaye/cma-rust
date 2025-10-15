@@ -44,7 +44,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY loggerd ./loggerd
 COPY waydash ./waydash
 COPY translation-lib ./translation-lib
-COPY traces ./traces
+COPY libs-cma ./libs-cma
 COPY rustlings ./rustlings
 
 # Format check
