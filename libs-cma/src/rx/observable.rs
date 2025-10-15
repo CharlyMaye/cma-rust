@@ -82,14 +82,7 @@ impl Drop for Unsubscribable {
     }
 }
 
-pub trait Subscribable<TValue, TError> {
-    // subscribe prend directement trois closures ; permet d'éviter Arc::new(...) côté appelant.
-    fn subscribe<N, E, C>(&mut self, next: N, error: E, complete: C) -> Unsubscribable
-    where
-        N: Fn(TValue) + Send + Sync + 'static,
-        E: Fn(TError) + Send + Sync + 'static,
-        C: Fn() + Send + Sync + 'static;
-}
+
 
 pub struct Observable<TValue: 'static, TError: 'static> {
     teardown: TeardownLogic<TValue, TError>,
@@ -117,6 +110,27 @@ impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     }
 }
 
+/// PIPE ///
+impl<TValue, TError> Observable<TValue, TError>
+where
+    TValue: 'static + Send,
+    TError: 'static + Send,
+{
+    pub fn pipe(self) -> Observable<TValue, TError> {
+        self
+    }
+    // d'autres opérateurs viendront ici}
+}
+
+/// SUBSCRIBE ///
+pub trait Subscribable<TValue, TError> {
+    // subscribe prend directement trois closures ; permet d'éviter Arc::new(...) côté appelant.
+    fn subscribe<N, E, C>(&mut self, next: N, error: E, complete: C) -> Unsubscribable
+    where
+        N: Fn(TValue) + Send + Sync + 'static,
+        E: Fn(TError) + Send + Sync + 'static,
+        C: Fn() + Send + Sync + 'static;
+}
 impl<TValue, TError> Subscribable<TValue, TError> for Observable<TValue, TError>
 where
     TValue: 'static + Send,
@@ -236,6 +250,7 @@ where
         }
     }
 }
+
 
 // no-op RawWaker callbacks (they must have unsafe fn signatures)
 unsafe fn noop_clone(data: *const ()) -> RawWaker {
