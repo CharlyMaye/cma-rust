@@ -2,6 +2,7 @@
 pub mod observable;
 pub mod observer;
 pub mod teardown;
+pub mod map;
 
 pub fn test_rx() {}
 
