@@ -1,9 +1,27 @@
-//https://refactoring.guru/design-patterns/observer
+//! # Reactive Programming Module
+//! 
+//! This module provides reactive programming patterns inspired by RxJS for Rust.
+//! It implements the Observer pattern with Observable streams, operators for data 
+//! transformation, and subscription management.
+//! 
+//! Based on the Observer design pattern: https://refactoring.guru/design-patterns/observer
+//! and https://github.com/ReactiveX/rxjs
+//! ## Core Components
+//! 
+//! - `Observable`: Represents a stream of data that can be observed
+//! - `Observer`: Handles next values, errors, and completion events
+//! - `Subscription`: Manages the lifecycle and cancellation of subscriptions
+//! - `Operators`: Transform and manipulate data streams (map, filter, etc.)
+
 pub mod observable;
 pub mod observer;
 pub mod operators;
 pub mod teardown;
 
+/// Test function for the reactive programming system.
+/// 
+/// This is a placeholder function used during development to test
+/// the rx module functionality.
 pub fn test_rx() {}
 
 #[cfg(test)]
@@ -40,9 +58,9 @@ mod tests {
         let results = Arc::new(Mutex::new(Vec::new()));
         let results_clone = Arc::clone(&results);
 
-        // Rien ne s'exécute ici - on construit juste la chaîne
+        // Nothing executes here - we're just building the chain
         let mut observable: Observable<i32, ()> = Observable::new(|observer| {
-            println!("Source exécutée !");
+            println!("Source executed!");
             (observer.next)(1);
             (observer.next)(2);
             (observer.next)(3);
@@ -56,16 +74,16 @@ mod tests {
             x * 2
         });
 
-        println!("Avant subscribe - rien ne s'est exécuté encore");
+        println!("Before subscribe - nothing has executed yet");
 
-        // TOUT s'exécute maintenant
+        // EVERYTHING executes now
         let mut sub = observable.subscribe(
             move |x| {
-                println!("Reçu: {}", x);
+                println!("Received: {}", x);
                 results_clone.lock().unwrap().push(x);
             },
-            |e| eprintln!("Erreur: {:?}", e),
-            || println!("Complété"),
+            |e| eprintln!("Error: {:?}", e),
+            || println!("Completed"),
         );
 
         sub.join().unwrap();
@@ -163,14 +181,14 @@ mod tests {
             || {},
         );
 
-        // recevoir le premier message
+        // receive the first message
         let first = rx.recv_timeout(Duration::from_secs(1));
         assert!(first.is_ok(), "Should receive first message");
 
-        // arrêter les callbacks
+        // stop callbacks
         unsub.unsubscribe();
 
-        // vérifier qu'on ne reçoit plus rien
+        // verify we don't receive anything else
         let result = rx.recv_timeout(Duration::from_millis(200));
         assert!(
             result.is_err(),
@@ -201,11 +219,11 @@ mod tests {
             || {},
         );
 
-        // recevoir un message
+        // receive a message
         let first = rx.recv_timeout(Duration::from_secs(1));
         assert!(first.is_ok(), "Should receive message");
 
-        // attendre la fin de la tâche
+        // wait for task completion
         let result = unsub.unsubscribe_and_wait();
         assert!(result.is_ok(), "unsubscribe_and_wait should succeed");
     }

@@ -16,7 +16,33 @@ use trace::HandlerRegister;
 pub use level::TraceLevel;
 pub use trace::Trace;
 
-// TODO - add builder
+/// Creates a preconfigured trace instance with common handlers.
+/// 
+/// This convenience function creates a ConcreteTrace with both console and file
+/// output handlers pre-registered. The file handler writes to "trace.log" in
+/// the current directory.
+/// 
+/// # Returns
+/// 
+/// * `Ok(impl Trace)` - A configured trace instance ready for use
+/// * `Err(Error)` - If the file handler cannot be created or started
+/// 
+/// # Examples
+/// 
+/// ```
+/// use cma::trace::{create_trace, TraceLevel};
+/// 
+/// let trace = create_trace().expect("Failed to create trace");
+/// trace.log(TraceLevel::Info, "Application started");
+/// ```
+/// 
+/// # Errors
+/// 
+/// This function will return an error if:
+/// - The trace.log file cannot be created
+/// - The file handler fails to start
+/// - There are insufficient permissions to write to the current directory
+// TODO: Add builder pattern for more flexible configuration
 pub fn create_trace() -> Result<impl Trace, Error> {
     let trace = ConcreteTrace::new();
 
