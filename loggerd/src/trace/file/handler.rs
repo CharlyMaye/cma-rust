@@ -39,11 +39,11 @@ use std::thread::{self, JoinHandle};
 /// # fn main() -> Result<(), std::io::Error> {
 /// // Default configuration (10 MB, 5 backups)
 /// let handler = FileTraceHandler::new("app.log")?.start()?;
-/// 
+///
 /// // Log some messages
 /// handler.log(TraceLevel::Info, "Application started");
 /// handler.log(TraceLevel::Warning, "High memory usage detected");
-/// 
+///
 /// // Check metrics
 /// let count = handler.log_counter().load(Ordering::Relaxed);
 /// println!("Logs written: {}", count);
@@ -174,7 +174,7 @@ impl FileTraceHandler {
     /// # fn main() -> Result<(), std::io::Error> {
     /// let handler = FileTraceHandler::new("app.log")?.start()?;
     /// let counter = handler.log_counter();
-    /// 
+    ///
     /// // Later, check how many logs have been written
     /// let count = counter.load(Ordering::Relaxed);
     /// println!("Total logs written: {}", count);

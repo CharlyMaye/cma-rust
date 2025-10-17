@@ -38,16 +38,16 @@ impl From<io::Error> for I18nError {
 }
 
 /// Internationalization state manager.
-/// 
+///
 /// Manages translations for multiple locales and provides methods to load
 /// locale-specific translation files. Translations are stored as key-value
 /// pairs in JSON format.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use cma::i18n::{I18nState, create_i18n};
-/// 
+///
 /// let mut i18n = create_i18n("en");
 /// i18n.load_locale("fr").expect("Failed to load French locale");
 /// ```
@@ -64,13 +64,13 @@ pub struct I18nState {
 
 impl I18nState {
     /// Creates a new I18nState with the specified default locale.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `default_locale` - The default locale to use as fallback
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new I18nState instance
     pub fn new(default_locale: &str) -> Self {
         Self {
@@ -83,22 +83,22 @@ impl I18nState {
 
 impl I18nState {
     /// Loads translations for the specified locale from a JSON file.
-    /// 
+    ///
     /// The file should be located in the `locales/` directory and named
     /// `{lang}.json`. The JSON should contain a flat object with
     /// translation keys and their corresponding values.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `lang` - The locale code (e.g., "en", "fr", "de")
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(())` - If the locale was loaded successfully
     /// * `Err(I18nError)` - If an error occurred during loading
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// * `I18nError::NoFile` - If the locale file doesn't exist
     /// * `I18nError::IoError` - If there was an I/O error reading the file
     /// * `I18nError::JSONError` - If the JSON couldn't be parsed
@@ -127,22 +127,22 @@ impl I18nState {
 }
 
 /// Creates a new I18n state with the specified default locale.
-/// 
+///
 /// This is a convenience function that creates an I18nState instance.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `default_locale` - The default locale to use
-/// 
+///
 /// # Returns
-/// 
+///
 /// A new I18nState instance
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use cma::i18n::create_i18n;
-/// 
+///
 /// let i18n = create_i18n("en");
 /// ```
 pub fn create_i18n(default_locale: &str) -> I18nState {

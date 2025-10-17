@@ -20,19 +20,19 @@ enum TraceMessage {
 }
 
 /// A trace handler that writes messages to a file.
-/// 
+///
 /// FileTraceHandler provides asynchronous file logging by using a dedicated
 /// background thread for all I/O operations. This prevents blocking the main
 /// application thread during log writes.
-/// 
+///
 /// # Thread Safety
-/// 
+///
 /// The handler uses a background thread and message passing to ensure
 /// thread-safe file operations. Multiple threads can log simultaneously
 /// without blocking each other.
-/// 
+///
 /// # File Sharing
-/// 
+///
 /// On supported platforms, the log file is opened with read sharing enabled,
 /// allowing other processes to read the file while logging is active.
 pub struct FileTraceHanlder {
@@ -46,24 +46,24 @@ pub struct FileTraceHanlder {
 
 impl FileTraceHanlder {
     /// Creates a new FileTraceHandler for the specified file path.
-    /// 
+    ///
     /// This constructor validates that the file can be created/opened but does not
     /// start the background writer thread. Call `start()` to begin logging.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `file_path` - Path to the log file
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(FileTraceHandler)` - If the file can be accessed
     /// * `Err(std::io::Error)` - If the file cannot be created or accessed
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use cma::trace::FileTraceHandler;
-    /// 
+    ///
     /// let handler = FileTraceHandler::new("app.log")
     ///     .expect("Failed to create file handler");
     /// ```
@@ -82,23 +82,23 @@ impl FileTraceHanlder {
     }
 
     /// Starts the background writer thread and returns self for method chaining (Builder pattern).
-    /// 
+    ///
     /// This method initializes the background thread responsible for file I/O operations.
     /// After calling this method, the handler is ready to receive log messages.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(Self)` - If the writer thread was started successfully
     /// * `Err(std::io::Error)` - If the file cannot be opened for writing
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use cma::trace::{FileTraceHandler, TraceLevel, Trace};
-    /// 
+    ///
     /// let handler = FileTraceHandler::new("app.log")?
     ///     .start()?;
-    /// 
+    ///
     /// handler.log(TraceLevel::Info, "Handler started");
     /// ```
     pub fn start(mut self) -> Result<Self, std::io::Error> {
@@ -121,16 +121,16 @@ impl FileTraceHanlder {
     }
 
     /// Opens the log file in append mode with read sharing enabled.
-    /// 
+    ///
     /// This method configures platform-specific file sharing options to allow
     /// other processes to read the log file while it's being written to.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `path` - Path to the log file
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// * `Ok(File)` - Successfully opened file handle
     /// * `Err(std::io::Error)` - If the file cannot be opened
     fn open_log_file(path: &Path) -> std::io::Result<File> {
@@ -166,12 +166,12 @@ impl FileTraceHanlder {
     }
 
     /// Background thread logic for writing log messages (separated for testability).
-    /// 
+    ///
     /// This function runs in a background thread and handles all file I/O operations.
     /// It processes messages from the main thread until a shutdown signal is received.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `file_path` - Path to the log file
     /// * `receiver` - Channel receiver for trace messages
     fn writer_thread(file_path: String, receiver: Receiver<TraceMessage>) {

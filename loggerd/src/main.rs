@@ -11,7 +11,7 @@ mod trace;
 use trace::{Trace, TraceLevel};
 
 /// Shared state for application metrics.
-/// 
+///
 /// Maintains counters and timing information for the HTTP API endpoints
 /// and integrates with the trace system for logging.
 #[derive(Clone)]
@@ -23,7 +23,7 @@ struct AppState {
 }
 
 /// Internal metrics state with atomic counters.
-/// 
+///
 /// Thread-safe metrics collection using atomic operations to avoid
 /// blocking during concurrent access from multiple request handlers.
 struct MetricsState {
@@ -36,18 +36,18 @@ struct MetricsState {
 }
 
 /// Main entry point for the loggerd daemon.
-/// 
+///
 /// Initializes the trace system with console and file handlers (with rotation),
 /// sets up HTTP API endpoints for health checks and metrics, and runs the server
 /// with graceful shutdown support.
-/// 
+///
 /// # HTTP Endpoints
-/// 
+///
 /// - `GET /health` - Health check endpoint (returns "OK")
 /// - `GET /metrics` - JSON metrics including request count, log count, and uptime
-/// 
+///
 /// # Graceful Shutdown
-/// 
+///
 /// The daemon listens for SIGTERM and SIGHUP signals and shuts down gracefully,
 /// ensuring all pending logs are written and resources are cleaned up.
 #[tokio::main]
@@ -97,30 +97,30 @@ async fn main() {
 }
 
 /// HTTP handler for the health check endpoint.
-/// 
+///
 /// Returns a simple "OK" response to indicate the service is running.
 /// This endpoint can be used by load balancers and monitoring systems
 /// to verify service availability.
-/// 
+///
 /// # Returns
-/// 
+///
 /// Static string "OK"
 async fn health_handler() -> &'static str {
     "OK"
 }
 
 /// HTTP handler for the metrics endpoint.
-/// 
+///
 /// Returns JSON-formatted metrics including:
 /// - Total HTTP requests processed
 /// - Total log messages written to files
 /// - Service uptime in seconds
 /// - Current service status
-/// 
+///
 /// This endpoint increments the request counter each time it's called.
-/// 
+///
 /// # Returns
-/// 
+///
 /// JSON object with current metrics
 async fn metrics_handler(State(state): State<AppState>) -> Json<serde_json::Value> {
     // Increment request counter
@@ -137,14 +137,14 @@ async fn metrics_handler(State(state): State<AppState>) -> Json<serde_json::Valu
 }
 
 /// Handles graceful shutdown on SIGTERM and SIGHUP signals.
-/// 
+///
 /// This function sets up signal handlers for SIGTERM and SIGHUP, which are
 /// commonly used by process managers and container orchestrators to request
 /// graceful shutdown. When either signal is received, the function logs the
 /// event and returns, allowing the main server loop to shut down cleanly.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `trace` - Shared trace instance for logging shutdown events
 async fn shutdown_signal(trace: Arc<dyn Trace + Send + Sync>) {
     let mut sigterm = signal(SignalKind::terminate()).expect("Failed to setup SIGTERM handler");

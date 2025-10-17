@@ -1,9 +1,9 @@
 //! Observable implementation for reactive programming patterns.
-//! 
+//!
 //! This module provides the core Observable type that represents a stream of data
 //! that can be observed. It supports both synchronous and asynchronous execution
 //! patterns and provides subscription management.
-//! 
+//!
 //! Based on the Observer design pattern: https://refactoring.guru/design-patterns/observer
 
 use std::future::Future;
@@ -22,7 +22,7 @@ use crate::rx::teardown::TeardownLogic;
 // TODO: We're managing unsafe ourselves. It might be preferable to use the futures crate
 
 /// Represents a subscription that can be unsubscribed from.
-/// 
+///
 /// Unsubscribable indicates whether the operation is already finished (sync) or if it
 /// is running in the background (async). We use a struct containing Option<JoinHandle>
 /// to be able to take the handle (Option::take) without moving a field from a type that
@@ -37,9 +37,9 @@ pub struct Unsubscribable {
 #[allow(dead_code)]
 impl Unsubscribable {
     /// Creates a new Unsubscribable for synchronous operations (already completed).
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// An Unsubscribable with no background handle and inactive flag
     pub fn ready() -> Self {
         Unsubscribable {
@@ -49,14 +49,14 @@ impl Unsubscribable {
     }
 
     /// Creates a new Unsubscribable for asynchronous operations with a background thread.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `handle` - The JoinHandle for the background thread
     /// * `active` - Shared atomic flag for cancellation
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// An Unsubscribable managing the background operation
     pub fn background(handle: std::thread::JoinHandle<()>, active: Arc<AtomicBool>) -> Self {
         Unsubscribable {
@@ -66,19 +66,19 @@ impl Unsubscribable {
     }
 
     /// Stop further callbacks immediately (non-blocking).
-    /// 
-    /// The background thread may still run, but callbacks are ignored 
+    ///
+    /// The background thread may still run, but callbacks are ignored
     /// because `active` is set to false.
     pub fn unsubscribe(&mut self) {
         self.active.store(false, Ordering::SeqCst);
     }
 
     /// Stop callbacks and wait for background task to finish (blocking).
-    /// 
+    ///
     /// This method will block until the background thread completes.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Result of joining the background thread, or Ok(()) if no background thread
     pub fn unsubscribe_and_wait(&mut self) -> std::thread::Result<()> {
         self.active.store(false, Ordering::SeqCst);
@@ -86,9 +86,9 @@ impl Unsubscribable {
     }
 
     /// Wait for background task to finish (if any).
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Result of joining the background thread, or Ok(()) if no background thread
     pub fn join(&mut self) -> std::thread::Result<()> {
         if let Some(h) = self.handle.take() {
@@ -99,7 +99,7 @@ impl Unsubscribable {
     }
 
     /// Detach: join in a spawned thread so this call is non-blocking.
-    /// 
+    ///
     /// The background thread will be joined in a separate thread, allowing
     /// this method to return immediately.
     pub fn detach(&mut self) {
@@ -125,27 +125,27 @@ impl Drop for Unsubscribable {
 }
 
 /// Observable represents a stream of data that can be observed.
-/// 
+///
 /// An Observable is a lazy data structure that doesn't emit values until
 /// it's subscribed to. It can emit zero or more values over time, and
 /// may complete successfully or with an error.
-/// 
+///
 /// # Generic Parameters
-/// 
+///
 /// * `TValue` - The type of values emitted by the Observable
 /// * `TError` - The type of errors that can occur
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use cma::rx::Observable;
-/// 
+///
 /// let observable = Observable::new(|observer| {
 ///     (observer.next)(42);
 ///     (observer.complete)();
 ///     Ok(())
 /// });
-/// 
+///
 /// observable.subscribe(
 ///     |value| println!("Received: {}", value),
 ///     |error| eprintln!("Error: {:?}", error),
@@ -162,23 +162,23 @@ pub struct Observable<TValue: 'static, TError: 'static> {
 #[allow(dead_code)]
 impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     /// Creates a new Observable with synchronous execution.
-    /// 
+    ///
     /// The provided function will be executed immediately when the Observable
     /// is subscribed to, and must complete synchronously.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `f` - A function that takes an Observer and returns a Result
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new Observable that will execute the provided function on subscription
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use cma::rx::Observable;
-    /// 
+    ///
     /// let observable = Observable::new(|observer| {
     ///     (observer.next)(1);
     ///     (observer.next)(2);
@@ -197,23 +197,23 @@ impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     }
 
     /// Creates a new Observable with asynchronous execution.
-    /// 
+    ///
     /// The provided function will be executed on a background thread when the Observable
     /// is subscribed to, and returns a Future that will be driven to completion.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `f` - A function that takes an Observer and returns a Future
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new Observable that will execute the provided async function on subscription
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use cma::rx::Observable;
-    /// 
+    ///
     /// let observable = Observable::with_async_teardown(|observer| async move {
     ///     // Simulate async work
     ///     tokio::time::sleep(Duration::from_millis(100)).await;
@@ -234,23 +234,23 @@ impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
 }
 
 /// Trait for types that can be subscribed to.
-/// 
+///
 /// This trait defines the subscription interface for Observable types,
 /// allowing consumers to register callbacks for next values, errors, and completion.
 #[allow(dead_code)]
 pub trait Subscribable<TValue, TError> {
     /// Subscribe to this Observable with the provided callbacks.
-    /// 
+    ///
     /// Takes three closures directly to avoid requiring Arc::new(...) on the caller side.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `next` - Callback for handling emitted values
     /// * `error` - Callback for handling errors
     /// * `complete` - Callback for handling completion
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// An Unsubscribable that can be used to cancel the subscription
     fn subscribe<N, E, C>(&mut self, next: N, error: E, complete: C) -> Unsubscribable
     where
@@ -395,7 +395,7 @@ static RAW_WAKER_VTABLE: RawWakerVTable =
     RawWakerVTable::new(noop_clone, noop_wake, noop_wake_by_ref, noop_drop);
 
 /// Helper that confines the single unsafe needed to create a Waker.
-/// 
+///
 /// Creates a no-op waker that can be used to poll futures without
 /// requiring a full async runtime.
 #[allow(dead_code)]
@@ -405,17 +405,17 @@ fn create_noop_waker() -> Waker {
 }
 
 /// Drive a boxed future to completion on a background thread, using a noop waker.
-/// 
+///
 /// This function spawns a new thread that will poll the provided future until
 /// it completes, using a simple polling loop with a no-op waker.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `fut` - The boxed future to drive to completion
 /// * `cb_for_err` - Observer for error propagation if the future fails
-/// 
+///
 /// # Returns
-/// 
+///
 /// A JoinHandle that the caller can wait on if desired
 #[allow(dead_code)]
 fn spawn_driven_future<TValue, TError>(

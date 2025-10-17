@@ -1,15 +1,15 @@
 //! # Waydash - Wayland System Dashboard
-//! 
+//!
 //! A system metrics dashboard built with egui for Wayland environments.
-//! This application displays real-time system information and connects to 
+//! This application displays real-time system information and connects to
 //! the loggerd daemon for logging metrics.
-//! 
+//!
 //! ## Features (Planned)
 //! - Real-time system metrics (CPU, memory, disk)
 //! - Integration with loggerd HTTP API
 //! - Wayland native (xdg-shell and layer-shell support)
 //! - Customizable dashboard layout
-//! 
+//!
 //! ## Architecture
 //! - GUI Framework: egui + eframe
 //! - Windowing: winit (Wayland backend)
@@ -18,7 +18,7 @@
 use eframe::egui;
 
 /// Main entry point for the waydash application
-/// 
+///
 /// Initializes the egui application with default options and runs the main event loop.
 /// This creates a native window using the default Wayland backend.
 fn main() -> eframe::Result<()> {
@@ -31,7 +31,7 @@ fn main() -> eframe::Result<()> {
 }
 
 /// Main application state for waydash
-/// 
+///
 /// Currently a minimal stub implementation. Future versions will include:
 /// - HTTP client for loggerd API communication
 /// - System metrics collection and display
@@ -41,7 +41,7 @@ struct App;
 
 impl eframe::App for App {
     /// Update the application UI
-    /// 
+    ///
     /// Called every frame to render the user interface. Currently displays
     /// a placeholder UI while the full dashboard functionality is being developed.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {

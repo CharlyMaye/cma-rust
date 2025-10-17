@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 /// Enumeration of trace levels for logging.
-/// 
+///
 /// This enum is simple (no heap data) and stored on the stack.
 /// We use Copy instead of passing by reference (&TraceLevel) because:
 /// - Copy of a simple enum = copy of a few bytes (size of a discriminant)

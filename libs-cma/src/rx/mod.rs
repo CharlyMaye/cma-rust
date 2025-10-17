@@ -1,13 +1,13 @@
 //! # Reactive Programming Module
-//! 
+//!
 //! This module provides reactive programming patterns inspired by RxJS for Rust.
-//! It implements the Observer pattern with Observable streams, operators for data 
+//! It implements the Observer pattern with Observable streams, operators for data
 //! transformation, and subscription management.
-//! 
+//!
 //! Based on the Observer design pattern: https://refactoring.guru/design-patterns/observer
 //! and https://github.com/ReactiveX/rxjs
 //! ## Core Components
-//! 
+//!
 //! - `Observable`: Represents a stream of data that can be observed
 //! - `Observer`: Handles next values, errors, and completion events
 //! - `Subscription`: Manages the lifecycle and cancellation of subscriptions
@@ -19,7 +19,7 @@ pub mod operators;
 pub mod teardown;
 
 /// Test function for the reactive programming system.
-/// 
+///
 /// This is a placeholder function used during development to test
 /// the rx module functionality.
 pub fn test_rx() {}

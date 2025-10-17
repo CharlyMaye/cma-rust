@@ -1,8 +1,8 @@
 //! Teardown logic for Observable subscriptions.
-//! 
+//!
 //! This module defines the teardown behavior for Observable subscriptions,
 //! supporting both synchronous and asynchronous execution patterns.
-//! 
+//!
 //! Based on the Observer design pattern: https://refactoring.guru/design-patterns/observer
 
 use std::future::Future;
@@ -17,27 +17,27 @@ type AsyncTeardownFuture<TError> = Pin<Box<dyn Future<Output = Result<(), TError
 type SyncTeardownResult<TError> = Result<(), TError>;
 
 /// Type alias for a synchronous teardown function.
-/// 
+///
 /// Takes a reference to an Observer and returns a Result immediately.
 type SyncTeardownFn<TValue, TError> =
     Arc<dyn Fn(&Observer<TValue, TError>) -> SyncTeardownResult<TError> + Send + Sync + 'static>;
 
 /// Type alias for an asynchronous teardown function.
-/// 
+///
 /// Takes ownership of an Observer and returns a Future that must be polled to completion.
 type AsyncTeardownFn<TValue, TError> =
     Arc<dyn Fn(Observer<TValue, TError>) -> AsyncTeardownFuture<TError> + Send + Sync + 'static>;
 
 /// Defines the teardown logic for Observable subscriptions.
-/// 
+///
 /// TeardownLogic encapsulates how an Observable should execute when subscribed to.
 /// It supports two execution modes:
-/// 
+///
 /// - **Sync**: Executes immediately and synchronously when subscribed
 /// - **Async**: Returns a Future that must be driven to completion on a background thread
-/// 
+///
 /// # Generic Parameters
-/// 
+///
 /// * `TValue` - The type of values emitted by the Observable
 /// * `TError` - The type of errors that can occur during execution
 pub enum TeardownLogic<TValue, TError> {
@@ -61,22 +61,22 @@ impl<TValue, TError> std::fmt::Debug for TeardownLogic<TValue, TError> {
 
 impl<TValue, TError> TeardownLogic<TValue, TError> {
     /// Creates a new synchronous teardown logic from a closure.
-    /// 
+    ///
     /// The provided closure will be executed immediately when the Observable is subscribed to.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `f` - A closure that takes an Observer reference and returns a Result
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A TeardownLogic::Sync variant containing the wrapped closure
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use cma::rx::teardown::TeardownLogic;
-    /// 
+    ///
     /// let teardown = TeardownLogic::from_sync(|observer| {
     ///     (observer.next)(42);
     ///     (observer.complete)();
@@ -91,23 +91,23 @@ impl<TValue, TError> TeardownLogic<TValue, TError> {
     }
 
     /// Creates a new asynchronous teardown logic from a closure that returns a Future.
-    /// 
-    /// The provided closure will be executed on a background thread when the Observable 
+    ///
+    /// The provided closure will be executed on a background thread when the Observable
     /// is subscribed to. The returned Future must be polled to completion.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `f` - A closure that takes an Observer by value and returns a Future
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A TeardownLogic::Async variant containing the wrapped closure
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use cma::rx::teardown::TeardownLogic;
-    /// 
+    ///
     /// let teardown = TeardownLogic::from_async(|observer| async move {
     ///     // Simulate async work
     ///     tokio::time::sleep(Duration::from_millis(100)).await;

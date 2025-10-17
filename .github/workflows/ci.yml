@@ -5,7 +5,7 @@ name: CI
 # Executes comprehensive testing via Docker to ensure environment consistency
 on:
   push:
-    branches: [ main, develop]
+    branches: [ main, develop, cma/** ]
   pull_request:
     branches: [ main, develop ]
 
@@ -27,19 +27,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
-      # Build stage builder : fait fmt + clippy + test + build
-      # Si une étape échoue, le build échoue = CI rouge
-      - name: Build and test (builder stage does everything)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/ci.Dockerfile
-          target: builder
-          push: false
-          load: true
-          tags: cma-rust-builder:latest
-      
-      # Extraire les binaires depuis le conteneur
       - name: Build with ci.Dockerfile
         # Execute comprehensive CI pipeline via Docker multi-stage build
         # This container automatically runs all quality checks and builds
@@ -61,38 +48,6 @@ jobs:
           
           ls -la loggerd waydash 2>/dev/null || echo "Some binaries might not exist yet"
       
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: binaries-x86_64
-          path: binaries/*
-          retention-days: 30
-      
-      # Build images runtime (optionnel)
-      - name: Build loggerd runtime image
-        if: success()
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/ci.Dockerfile
-          target: loggerd-runtime
-          push: false
-          load: true
-          tags: cma-rust-loggerd:latest
-      
-      - name: Build waydash runtime image
-        if: success()
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/ci.Dockerfile
-          target: waydash-runtime
-          push: false
-          load: true
-          tags: cma-rust-waydash:latest
-      
-      - name: Summary
       - name: Upload binaries
         # Store compiled binaries as GitHub Actions artifacts
         # Available for download and use in deployment workflows

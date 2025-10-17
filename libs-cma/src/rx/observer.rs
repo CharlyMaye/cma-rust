@@ -1,23 +1,23 @@
 //! Observer implementation for the reactive programming patterns.
-//! 
+//!
 //! Based on the Observer design pattern: https://refactoring.guru/design-patterns/observer
 
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, atomic::AtomicBool};
 
 /// Observer represents the recipient of notifications from an Observable.
-/// 
+///
 /// The Observer contains three callback functions:
 /// - `next`: Called when the Observable emits a new value
 /// - `error`: Called when an error occurs in the Observable
 /// - `complete`: Called when the Observable completes successfully
-/// 
-/// All callbacks are "wrapped" - they check the `active` flag before 
+///
+/// All callbacks are "wrapped" - they check the `active` flag before
 /// calling the user-provided closure to ensure callbacks don't execute
 /// after unsubscription.
-/// 
+///
 /// # Generic Parameters
-/// 
+///
 /// * `TValue` - The type of values emitted by the Observable
 /// * `TError` - The type of errors that can occur
 pub struct Observer<TValue, TError> {
@@ -47,12 +47,12 @@ impl<TValue, TError> Clone for Observer<TValue, TError> {
 #[allow(dead_code)]
 impl<TValue, TError> Observer<TValue, TError> {
     /// Helper method to check if this observer is still active.
-    /// 
+    ///
     /// This provides a safe interface to access the cancellation token
     /// without directly exposing atomic operations.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `true` if the observer is still active and should process events,
     /// `false` if it has been unsubscribed
     pub fn is_active(&self) -> bool {

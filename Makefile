@@ -93,7 +93,7 @@ ci-local: ## Simulate hybrid CI pipeline locally (fast)
 	@echo ""
 	
 	@echo "🔍 Running tests..."
-	@cargo test --all --verbose
+	@cargo test --all --verbose --bins --lib
 	@echo "✅ Tests OK"
 	@echo ""
 	

@@ -18,34 +18,34 @@ pub use level::TraceLevel;
 pub use trace::Trace;
 
 /// Creates a preconfigured trace system for the loggerd daemon.
-/// 
+///
 /// This function sets up a complete logging system with:
 /// - Console output handler for immediate feedback
 /// - File handler with automatic rotation (writes to "loggerd.log")
 /// - Shared atomic counter for metrics tracking
-/// 
+///
 /// The file handler is configured with default rotation settings:
 /// - Maximum file size: 10 MB
 /// - Maximum backup files: 5
 /// - Rotation includes timestamps for backup files
-/// 
+///
 /// # Returns
-/// 
+///
 /// * `Ok((impl Trace + Send + Sync, Arc<AtomicU64>))` - Configured trace system and log counter
 /// * `Err(Error)` - If the file handler cannot be created or started
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use loggerd::trace::{create_trace, TraceLevel};
-/// 
+///
 /// let (trace, counter) = create_trace().expect("Failed to create trace system");
 /// trace.log(TraceLevel::Info, "Daemon started");
 /// println!("Logs written: {}", counter.load(std::sync::atomic::Ordering::Relaxed));
 /// ```
-/// 
+///
 /// # Errors
-/// 
+///
 /// This function will return an error if:
 /// - The loggerd.log file cannot be created
 /// - The file handler thread fails to start
