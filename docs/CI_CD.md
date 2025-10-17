@@ -1,41 +1,44 @@
+````markdown
 # CI/CD Pipeline
 
-## � Principe
+## 🔧 Principle
 
-**Tout le CI s'exécute dans Docker via `docker/ci.Dockerfile`**
+**All CI runs in Docker via `docker/ci.Dockerfile`**
 
-Le Dockerfile fait :
-1. `cargo fmt --check` → vérifie formatage
-2. `cargo clippy -- -D warnings` → lint strict
-3. `cargo test --all` → tous les tests
-4. `cargo build --release` → compile
+The Dockerfile performs:
+1. `cargo fmt --check` → validates formatting
+2. `cargo clippy -- -D warnings` → strict linting
+3. `cargo test --all` → all tests
+4. `cargo build --release` → compilation
 
-Si une étape échoue → build échoue → CI rouge ❌
+If any step fails → build fails → CI red ❌
 
-## 🚀 Déclenché sur
+## 🚀 Triggered on
 
-- Push vers `main`, `develop`, `cma/**`
-- Pull Requests vers `main`, `develop`
+- Push to `main`, `develop`, `cma/**`
+- Pull Requests to `main`, `develop`
 
-## 📦 Résultat
+## 📦 Results
 
-- Binaires : `loggerd`, `waydash` (téléchargeables)
-- Images Docker : `cma-rust-loggerd`, `cma-rust-waydash`
+- Binaries: `loggerd`, `waydash` (downloadable)
+- Docker Images: `cma-rust-loggerd`, `cma-rust-waydash`
 
-## � Tester localement
+## 🧪 Test Locally
 
 ```bash
-# Avec Docker (identique au CI)
+# With Docker (identical to CI)
 docker build -f docker/ci.Dockerfile .
 
-# Ou avec Make
+# Or with Make
 make docker-build
 
-# Sans Docker (plus rapide)
+# Without Docker (faster)
 make ci-local
 ```
 
 ## ⚙️ Performance
 
-- **Première fois** : ~8-10 min
-- **Avec cache** : ~3-5 min
+- **First time**: ~8-10 min
+- **With cache**: ~3-5 min
+
+````

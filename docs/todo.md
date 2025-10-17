@@ -1,58 +1,58 @@
-TODO.md — Parcours Rust/Linux/Wayland
-🎯 Objectif global
+TODO.md — Rust/Linux/Wayland Journey
+🎯 Global Objective
 
-Maîtrise du Rust bas-niveau et du monde Linux (systemd, snap, containers).
+Master low-level Rust and the Linux ecosystem (systemd, snap, containers).
 
-Construction d’un démon Rust robuste et packagé (loggerd).
+Build a robust and packaged Rust daemon (loggerd).
 
-Création d’une UI Wayland Rust (waydash) affichant les métriques du démon.
+Create a Wayland Rust UI (waydash) displaying daemon metrics.
 
-Publication open source : code, doc, lib, article, contributions.
+Open source publication: code, documentation, library, article, contributions.
 
 
-🧰 Prérequis et environnement
+🧰 Prerequisites and Environment
 
-Système hôte : ArchLinux
+Host system: ArchLinux
 
-Conteneurs de build/test : Ubuntu 24.04 (Docker)
+Build/test containers: Ubuntu 24.04 (Docker)
 
-Langage : Rust stable + nightly
+Language: Rust stable + nightly
 
-Éditeur recommandé : VSCode ou Helix + Rust-Analyzer
+Recommended editor: VSCode or Helix + Rust-Analyzer
 
-CI : GitHub Actions
+CI: GitHub Actions
 
-Packaging : Snapcraft
+Packaging: Snapcraft
 
-Stack graphique : Wayland (winit, egui, smithay-client-toolkit)
+Graphics stack: Wayland (winit, egui, smithay-client-toolkit)
 
-🧭 Vue d’ensemble
-Semaine	Thème principal	Livrable clé
-1	Setup & CI Rust pro	Environnement Docker + CI stable
-2	Daemon système (loggerd)	Service Rust + systemd
-3	Packaging Ubuntu	Snap fonctionnel
-4	UI Wayland (xdg-shell)	Dashboard visuel basique
-5	UI Wayland avancée (layer-shell)	OSD/panel pour wlroots
-6	Lib de traduction	Publiée sur crates.io
-7	Observabilité & tests	Metrics, perf, CI
-8	Open source & article	PR publique + article
-9	Projet final “showcase”	Ensemble complet prêt à publier
-10	Dossier CV, cover letter, portfolio
-🗓️ Semaine 1 — Setup & CI Rust pro
+🧭 Overview
+Week	Main Theme	Key Deliverable
+1	Pro Rust Setup & CI	Docker environment + stable CI
+2	System daemon (loggerd)	Rust service + systemd
+3	Ubuntu packaging	Functional Snap
+4	Wayland UI (xdg-shell)	Basic visual dashboard
+5	Advanced Wayland UI (layer-shell)	OSD/panel for wlroots
+6	Translation library	Published on crates.io
+7	Observability & tests	Metrics, perf, CI
+8	Open source & article	Public PR + article
+9	Final "showcase" project	Complete set ready to publish
+10	Resume folder, cover letter, portfolio
+🗓️ Week 1 — Pro Rust Setup & CI
 
-🎯 Objectif : Structurer ton environnement pro Rust/Linux.
+🎯 Objective: Structure your professional Rust/Linux environment.
 
-✅ Tâches :
+✅ Tasks:
 
-Installer toolchains Rust :
+Install Rust toolchains:
 
 rustup default stable
 rustup component add rustfmt clippy
 
 
-Créer un Dockerfile Ubuntu 24.04 multi-stage (build/test).
+Create a multi-stage Ubuntu 24.04 Dockerfile (build/test).
 
-Ajouter un workflow GitHub Actions :
+Add a GitHub Actions workflow:
 
 cargo fmt --check
 
@@ -60,9 +60,9 @@ cargo clippy -- -D warnings
 
 cargo test
 
-build release (multi-arch avec cross).
+release build (multi-arch with cross).
 
-Créer repo :
+Create repository:
 
 /loggerd
 /waydash
@@ -71,8 +71,8 @@ Créer repo :
 TODO.md
 
 
-💡 Livrable :
-Dockerfile Ubuntu + pipeline CI complet fonctionnel.
+💡 Deliverable:
+Ubuntu Dockerfile + complete functional CI pipeline.
 
 🗓️ Semaine 2 — Daemon Rust : loggerd
 
