@@ -1,20 +1,14 @@
 use crate::trace::{Trace, handlers::TraceHandler};
 
-/// A trace handler that prints log messages to the console.
+/// A trace handler that prints messages to standard output.
 ///
-/// PrintTraceHandler provides immediate console output for trace messages,
-/// making it ideal for development, debugging, and providing real-time
-/// feedback when running the loggerd daemon.
-///
-/// # Thread Safety
-///
-/// This handler is thread-safe as it has no shared state and uses
-/// the thread-safe `println!` macro for output.
+/// PrintTraceHandler provides a simple console output mechanism for trace messages.
+/// All messages are formatted with their trace level and printed to stdout.
 ///
 /// # Examples
 ///
 /// ```
-/// use loggerd::trace::{PrintTraceHandler, TraceLevel, Trace};
+/// use cma::trace::{PrintTraceHandler, TraceLevel, Trace};
 ///
 /// let handler = PrintTraceHandler::new();
 /// handler.log(TraceLevel::Info, "Hello, world!");
@@ -41,7 +35,3 @@ impl Trace for PrintTraceHandler {
 }
 
 impl TraceHandler for PrintTraceHandler {}
-
-// PrintTraceHandler is Send + Sync because it has no shared state
-unsafe impl Send for PrintTraceHandler {}
-unsafe impl Sync for PrintTraceHandler {}

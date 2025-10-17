@@ -1,31 +1,31 @@
-# Architecture du module file
+# File Module Architecture
 
-## Structure des fichiers
+## File Structure
 
 ```
 loggerd/src/trace/file/
-├── mod.rs              (27 lignes)   - Module principal
-├── file_opener.rs      (41 lignes)   - Ouverture cross-platform
-├── rotation.rs         (93 lignes)   - Rotation des logs
-├── writer.rs          (133 lignes)   - Thread d'écriture
-└── handler.rs         (145 lignes)   - Façade publique
+├── mod.rs              (27 lines)    - Main module
+├── file_opener.rs      (41 lines)    - Cross-platform file opening
+├── rotation.rs         (93 lines)    - Log rotation
+├── writer.rs          (133 lines)    - Writer thread
+└── handler.rs         (145 lines)    - Public facade
 ```
 
-**Total** : 439 lignes (bien documentées et structurées)
+**Total**: 439 lines (well-documented and structured)
 
 ---
 
-## Diagramme de dépendances
+## Dependency Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                         mod.rs                              │
 │  ┌───────────────────────────────────────────────────────┐  │
-│  │  Ré-exports publics:                                  │  │
+│  │  Public re-exports:                                   │  │
 │  │  - pub use handler::FileTraceHandler                  │  │
 │  │  - pub use rotation::RotationConfig                   │  │
 │  └───────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+│─────────────────────────────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
@@ -46,10 +46,10 @@ loggerd/src/trace/file/
                │         writer.rs                    │
                │                                      │
                │ writer_thread()                      │
-               │ ├─ Reçoit TraceMessage              │
-               │ ├─ Écrit dans fichier ──────────────┤
-               │ ├─ Surveille taille                 │
-               │ └─ Déclenche rotation ──────────────┘
+               │ ├─ Receives TraceMessage            │
+               │ ├─ Writes to file ──────────────────┤
+               │ ├─ Monitors file size               │
+               │ └─ Triggers rotation ───────────────┘
                │                                      │
                │ Helpers:                             │
                │ - should_rotate()                    │
@@ -60,9 +60,9 @@ loggerd/src/trace/file/
 
 ---
 
-## Flux de données
+## Data Flow
 
-### 1. Initialisation
+### 1. Initialization
 
 ```
 main.rs
@@ -71,17 +71,17 @@ main.rs
         │
         └─> FileTraceHandler::new("loggerd.log")
               │
-              ├─> Validation: fichier peut être créé
-              └─> Retourne handler (non démarré)
+              ├─> Validation: file can be created
+              └─> Returns handler (not started)
                     │
                     └─> handler.start()
                           │
-                          ├─> Crée channel MPSC
-                          ├─> Spawn writer_thread()
-                          └─> Retourne handler (démarré)
+                          ├─> Creates MPSC channel
+                          ├─> Spawns writer_thread()
+                          └─> Returns handler (started)
 ```
 
-### 2. Écriture d'un log
+### 2. Writing a log entry
 
 ```
 app.log(TraceLevel::Info, "message")
@@ -91,12 +91,12 @@ app.log(TraceLevel::Info, "message")
         ├─> Format: "[INFO] - message\n"
         └─> sender.send(TraceMessage::Log(formatted))
               │
-              │ (Canal MPSC)
+              │ (MPSC Channel)
               │
               ▼
         writer_thread()
               │
-              ├─> should_rotate()? ─── Oui ──┐
+              ├─> should_rotate()? ─── Yes ──┐
               │                               │
               │                               ▼
               │                      perform_rotation()
@@ -116,10 +116,10 @@ app.log(TraceLevel::Info, "message")
                     └─> log_count.fetch_add(1)
 ```
 
-### 3. Rotation des fichiers
+### 3. File rotation
 
 ```
-writer_thread détecte: current_size + message_len > max_size
+writer_thread detects: current_size + message_len > max_size
   │
   └─> perform_rotation()
         │
@@ -127,14 +127,14 @@ writer_thread détecte: current_size + message_len > max_size
         │
         └─> rotate_log_files(file_path, max_backups)
               │
-              ├─> Supprime: loggerd.log.5
+              ├─> Remove: loggerd.log.5
               ├─> Rename: loggerd.log.4 → loggerd.log.5
               ├─> Rename: loggerd.log.3 → loggerd.log.4
               ├─> Rename: loggerd.log.2 → loggerd.log.3
               ├─> Rename: loggerd.log.1.xxx → loggerd.log.2
               │
-              ├─> timestamp = "20251014_174532"
-              └─> Rename: loggerd.log → loggerd.log.1.20251014_174532
+              ├─> timestamp = "20251017_174532"
+              └─> Rename: loggerd.log → loggerd.log.1.20251017_174532
                     │
                     └─> eprintln!("Log rotated: ...")
 ```
@@ -146,86 +146,86 @@ Drop(FileTraceHandler)
   │
   ├─> sender.send(TraceMessage::Shutdown)
   │     │
-  │     └─> writer_thread() reçoit Shutdown
+  │     └─> writer_thread() receives Shutdown
   │           │
   │           ├─> file.flush()
   │           └─> break loop
   │
   └─> thread_handle.join()
         │
-        └─> Attend fin du thread
+        └─> Wait for thread completion
 ```
 
 ---
 
-## API publique
+## Public API
 
-### Types exportés
+### Exported Types
 
 ```rust
-// Depuis file/mod.rs
+// From file/mod.rs
 pub use handler::FileTraceHandler;
 pub use rotation::RotationConfig;
 ```
 
-### Utilisation
+### Usage
 
 ```rust
-// Configuration par défaut
+// Default configuration
 let handler = FileTraceHandler::new("app.log")?.start()?;
 
-// Configuration custom
+// Custom configuration
 let handler = FileTraceHandler::with_rotation(
     "app.log",
     5 * 1024 * 1024,  // 5 MB
     10                 // 10 backups
 )?.start()?;
 
-// Configuration avancée
+// Advanced configuration
 let config = RotationConfig::new(5 * 1024 * 1024, 10);
 let handler = FileTraceHandler::with_config("app.log", config)?.start()?;
 
-// Utilisation
+// Usage
 handler.log(TraceLevel::Info, "Application started");
 
-// Métriques
+// Metrics
 let counter = handler.log_counter();
-println!("Logs écrits: {}", counter.load(Ordering::Relaxed));
+println!("Logs written: {}", counter.load(Ordering::Relaxed));
 ```
 
 ---
 
-## Responsabilités par module
+## Responsibilities by Module
 
-| Module | Responsabilités | Dépendances |
-|--------|----------------|-------------|
-| `mod.rs` | Documentation, ré-exports | Tous les modules |
-| `file_opener.rs` | Ouverture cross-platform | `std::fs`, `std::os` |
-| `rotation.rs` | Rotation, archivage, config | `chrono`, `std::fs` |
-| `writer.rs` | Thread d'écriture, surveillance taille | `file_opener`, `rotation` |
-| `handler.rs` | API publique, gestion thread | `writer`, `rotation` |
+| Module | Responsibilities | Dependencies |
+|--------|-----------------|-------------|
+| `mod.rs` | Documentation, re-exports | All modules |
+| `file_opener.rs` | Cross-platform file opening | `std::fs`, `std::os` |
+| `rotation.rs` | Rotation, archiving, config | `chrono`, `std::fs` |
+| `writer.rs` | Writer thread, size monitoring | `file_opener`, `rotation` |
+| `handler.rs` | Public API, thread management | `writer`, `rotation` |
 
 ---
 
-## Lignes de code par catégorie
+## Lines of Code by Category
 
 ```
-Documentation:  ~150 lignes (34%)
-Code:          ~250 lignes (57%)
-Tests:          ~40 lignes (9%)
+Documentation:  ~150 lines (34%)
+Code:          ~250 lines (57%)
+Tests:          ~40 lines (9%)
 ────────────────────────────────
-Total:          439 lignes
+Total:          439 lines
 ```
 
-### Ratio documentation/code : **34%** 📚
+### Documentation/code ratio: **34%** 📚
 
-Très bon ratio pour un code production-ready !
+Excellent ratio for production-ready code!
 
 ---
 
-## Extensibilité
+## Extensibility
 
-### Ajout d'une nouvelle stratégie de rotation
+### Adding a new rotation strategy
 
 ```rust
 // Dans rotation.rs
@@ -250,10 +250,10 @@ impl RotationStrategy {
 }
 ```
 
-### Ajout de compression
+### Adding compression
 
 ```rust
-// Dans rotation.rs
+// In rotation.rs
 pub fn rotate_and_compress(file_path: &str, config: &RotationConfig) -> Result<()> {
     rotate_log_files(file_path, config.max_backups)?;
     
@@ -272,19 +272,19 @@ fn compress_backup(path: &str) -> Result<()> {
 
 ---
 
-## Métriques de qualité
+## Quality Metrics
 
-| Critère | Score | Commentaire |
-|---------|-------|-------------|
-| **Lisibilité** | ⭐⭐⭐⭐⭐ | Noms clairs, fonctions courtes |
-| **Maintenabilité** | ⭐⭐⭐⭐⭐ | SRP respecté, modules isolés |
-| **Testabilité** | ⭐⭐⭐⭐⭐ | Fonctions pures, tests unitaires |
-| **Documentation** | ⭐⭐⭐⭐⭐ | 34% doc, exemples inclus |
-| **Performance** | ⭐⭐⭐⭐☆ | Thread dédié, I/O non-bloquant |
-| **Extensibilité** | ⭐⭐⭐⭐⭐ | Architecture ouverte |
+| Criterion | Score | Comment |
+|-----------|-------|---------|
+| **Readability** | ⭐⭐⭐⭐⭐ | Clear names, short functions |
+| **Maintainability** | ⭐⭐⭐⭐⭐ | SRP respected, isolated modules |
+| **Testability** | ⭐⭐⭐⭐⭐ | Pure functions, unit tests |
+| **Documentation** | ⭐⭐⭐⭐⭐ | 34% doc, examples included |
+| **Performance** | ⭐⭐⭐⭐☆ | Dedicated thread, non-blocking I/O |
+| **Extensibility** | ⭐⭐⭐⭐⭐ | Open architecture |
 
-**Score global** : **29/30** 🏆
+**Overall Score**: **29/30** 🏆
 
 ---
 
-*Architecture documentée le 2025-10-14*
+*Architecture documented on 2025-10-17*

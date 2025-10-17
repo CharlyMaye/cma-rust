@@ -10,7 +10,6 @@ use std::fmt::Display;
 /// - Copy is more idiomatic in Rust for primitive/simple types
 /// - Simplifies code: no & everywhere, no lifetime management
 #[derive(Debug, Copy, Clone)]
-#[allow(dead_code)] // All levels are part of the public API
 pub enum TraceLevel {
     /// Verbose logging - most detailed
     Verbose,

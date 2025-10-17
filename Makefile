@@ -1,40 +1,40 @@
 .PHONY: help build test fmt clippy clean docker-build docker-test docker-run-loggerd docker-run-waydash ci-local
 
-help: ## Affiche cette aide
+help: ## Display this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 # ==============================================================================
-# Commandes Rust locales
+# Local Rust Commands
 # ==============================================================================
 
-build: ## Compile tous les projets en mode debug
+build: ## Compile all projects in debug mode
 	cargo build --all
 
-release: ## Compile tous les projets en mode release
+release: ## Compile all projects in release mode
 	cargo build --release --all
 
-test: ## Execute tous les tests
+test: ## Execute all tests
 	cargo test --all --verbose
 
-fmt: ## Vérifie le formatage du code
+fmt: ## Check code formatting
 	cargo fmt --all -- --check
 
-fmt-fix: ## Corrige automatiquement le formatage
+fmt-fix: ## Automatically fix code formatting
 	cargo fmt --all
 
-clippy: ## Execute le linter Clippy
+clippy: ## Execute Clippy linter
 	cargo clippy --all-targets --all-features -- -D warnings
 
-clean: ## Nettoie les artefacts de build
+clean: ## Clean build artifacts
 	cargo clean
 
-check: fmt clippy test ## Execute toutes les vérifications (fmt, clippy, test)
+check: fmt clippy test ## Execute all checks (fmt, clippy, test)
 
 # ==============================================================================
-# Commandes Docker
+# Docker Commands
 # ==============================================================================
 
-docker-build: ## Build toutes les images Docker CI (builder + runtime)
+docker-build: ## Build all Docker CI images (builder + runtime)
 	@echo "🐳 Building all Docker CI stages..."
 	docker build -f docker/ci.Dockerfile --target builder -t cma-rust-builder:latest .
 	docker build -f docker/ci.Dockerfile --target loggerd-runtime -t cma-rust-loggerd:latest .
@@ -42,7 +42,7 @@ docker-build: ## Build toutes les images Docker CI (builder + runtime)
 	@echo "✅ All images built successfully"
 	@docker images | grep cma-rust
 
-docker-test: ## Execute les tests dans Docker (comme ci-docker-only.yml)
+docker-test: ## Execute tests in Docker (like ci-docker-only.yml)
 	@echo "🐳 Building CI Docker image (all stages)..."
 	docker build -f docker/ci.Dockerfile --target builder -t cma-rust-builder .
 	@echo ""
@@ -52,20 +52,20 @@ docker-test: ## Execute les tests dans Docker (comme ci-docker-only.yml)
 	@echo ""
 	@echo "✅ Tests passed in Docker environment"
 
-docker-build-loggerd: ## Build seulement l'image runtime loggerd
+docker-build-loggerd: ## Build only the loggerd runtime image
 	@echo "🐳 Building loggerd runtime image..."
 	docker build -f docker/ci.Dockerfile --target loggerd-runtime -t cma-rust-loggerd:latest .
 	@echo "✅ loggerd image ready"
 
-docker-build-waydash: ## Build seulement l'image runtime waydash
+docker-build-waydash: ## Build only the waydash runtime image
 	@echo "🐳 Building waydash runtime image..."
 	docker build -f docker/ci.Dockerfile --target waydash-runtime -t cma-rust-waydash:latest .
 	@echo "✅ waydash image ready"
 
-docker-run-loggerd: docker-build-loggerd ## Execute loggerd dans Docker
+docker-run-loggerd: docker-build-loggerd ## Execute loggerd in Docker
 	docker run --rm -p 8080:8080 cma-rust-loggerd:latest
 
-docker-run-waydash: docker-build-waydash ## Execute waydash dans Docker (nécessite Wayland)
+docker-run-waydash: docker-build-waydash ## Execute waydash in Docker (requires Wayland)
 	docker run --rm -it \
 		-e WAYLAND_DISPLAY=$$WAYLAND_DISPLAY \
 		-e XDG_RUNTIME_DIR=$$XDG_RUNTIME_DIR \
@@ -75,86 +75,86 @@ docker-run-waydash: docker-build-waydash ## Execute waydash dans Docker (nécess
 		cma-rust-waydash:latest
 
 # ==============================================================================
-# CI local
+# Local CI
 # ==============================================================================
 
-ci-local: ## Simule le pipeline CI hybride en local (rapide)
-	@echo "� Pipeline CI Local (Hybride - comme ci.yml)"
+ci-local: ## Simulate hybrid CI pipeline locally (fast)
+	@echo "🔄 Local CI Pipeline (Hybrid - like ci.yml)"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo ""
-	@echo "�🔍 Vérification du formatage..."
+	@echo "🔍 Checking formatting..."
 	@cargo fmt --all -- --check
-	@echo "✅ Formatage OK"
+	@echo "✅ Formatting OK"
 	@echo ""
 	
-	@echo "🔍 Exécution de Clippy..."
+	@echo "🔍 Running Clippy..."
 	@cargo clippy --all-targets --all-features -- -D warnings
 	@echo "✅ Clippy OK"
 	@echo ""
 	
-	@echo "🔍 Exécution des tests..."
-	@cargo test --all --verbose
+	@echo "🔍 Running tests..."
+	@cargo test --all --verbose --bins --lib
 	@echo "✅ Tests OK"
 	@echo ""
 	
-	@echo "🔍 Build release..."
+	@echo "🔍 Release build..."
 	@cargo build --release --all
 	@echo "✅ Build OK"
 	@echo ""
 	
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🎉 Pipeline CI local réussi !"
+	@echo "🎉 Local CI pipeline successful!"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-ci-docker: docker-test ## Simule le pipeline CI Docker-Only (reproductible)
+ci-docker: docker-test ## Simulate Docker-Only CI pipeline (reproducible)
 	@echo ""
-	@echo "🐳 Pipeline CI Docker-Only simulé avec succès"
-	@echo "Équivalent au workflow: ci-docker-only.yml"
+	@echo "🐳 Docker-Only CI pipeline simulated successfully"
+	@echo "Equivalent to workflow: ci-docker-only.yml"
 
 # ==============================================================================
-# Gestion des binaires
+# Binary Management
 # ==============================================================================
 
-install: release ## Installe les binaires dans ~/.cargo/bin
+install: release ## Install binaries in ~/.cargo/bin
 	cargo install --path loggerd
 	cargo install --path waydash
 
-run-loggerd: ## Execute loggerd en mode debug
+run-loggerd: ## Execute loggerd in debug mode
 	cargo run --package loggerd
 
-run-waydash: ## Execute waydash en mode debug
+run-waydash: ## Execute waydash in debug mode
 	cargo run --bin waydash
 
-test-loggerd: ## Execute le script de test automatique pour loggerd
+test-loggerd: ## Execute automatic test script for loggerd
 	@./loggerd/test.sh
 
-health-check: ## Test rapide de l'endpoint /health
+health-check: ## Quick test of /health endpoint
 	@curl -s http://localhost:8080/health && echo ""
 
-metrics: ## Affiche les métriques actuelles
+metrics: ## Display current metrics
 	@curl -s http://localhost:8080/metrics | python3 -m json.tool 2>/dev/null || curl -s http://localhost:8080/metrics
 
-stop-loggerd: ## Arrête proprement loggerd avec SIGTERM
-	@pkill -TERM -f "target/debug/loggerd" && echo "✅ SIGTERM envoyé" || echo "ℹ️  Aucun processus loggerd trouvé"
+stop-loggerd: ## Stop loggerd gracefully with SIGTERM
+	@pkill -TERM -f "target/debug/loggerd" && echo "✅ SIGTERM sent" || echo "ℹ️  No loggerd process found"
 
 # ==============================================================================
-# Outils de développement
+# Development Tools
 # ==============================================================================
 
-watch-loggerd: ## Execute loggerd avec cargo-watch (auto-reload)
+watch-loggerd: ## Execute loggerd with cargo-watch (auto-reload)
 	cargo watch -x 'run --bin loggerd'
 
-watch-waydash: ## Execute waydash avec cargo-watch (auto-reload)
+watch-waydash: ## Execute waydash with cargo-watch (auto-reload)
 	cargo watch -x 'run --bin waydash'
 
-doc: ## Génère et ouvre la documentation
+doc: ## Generate and open documentation
 	cargo doc --all --no-deps --open
 
-tree: ## Affiche l'arbre des dépendances
+tree: ## Display dependency tree
 	cargo tree --all
 
-outdated: ## Vérifie les dépendances obsolètes (nécessite cargo-outdated)
+outdated: ## Check outdated dependencies (requires cargo-outdated)
 	cargo outdated
 
-audit: ## Vérifie les vulnérabilités (nécessite cargo-audit)
+audit: ## Check vulnerabilities (requires cargo-audit)
 	cargo audit

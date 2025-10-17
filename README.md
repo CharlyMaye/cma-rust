@@ -2,32 +2,32 @@
 
 [![CI](https://github.com/CharlyMaye/cma-rust/workflows/CI/badge.svg)](https://github.com/CharlyMaye/cma-rust/actions)
 
-> 🦀 Rust Learning Journey — Système, Wayland & Open Source
+> 🦀 Rust Learning Journey — System, Wayland & Open Source
 
-Projet complet d'apprentissage Rust bas-niveau avec construction d'un démon système (`loggerd`) et d'un dashboard Wayland (`waydash`).
+Complete low-level Rust learning project with construction of a system daemon (`loggerd`) and a Wayland dashboard (`waydash`).
 
-## 📦 Projets du Workspace
+## 📦 Workspace Projects
 
-Ce workspace contient plusieurs crates Rust :
+This workspace contains several Rust crates:
 
-| Crate | Description | Statut |
+| Crate | Description | Status |
 |-------|-------------|--------|
-| **loggerd** | Démon système de logging avec rotation + API REST | ✅ Fonctionnel |
-| **waydash** | Dashboard Wayland pour afficher les métriques | 🚧 Planifié |
-| **translation-lib** | Bibliothèque i18n pour Rust | 📦 À publier |
-| **traces** | Bibliothèque de logging personnalisée avec Rx patterns | 🎓 En cours |
-| **rustlings** | Exercices Rust (apprentissage) | 🎓 En cours |
+| **loggerd** | System logging daemon with rotation + REST API | ✅ Functional |
+| **waydash** | Wayland dashboard to display metrics | 🚧 Planned |
+| **translation-lib** | i18n library for Rust | 📦 To publish |
+| **traces** | Custom logging library with Rx patterns | 🎓 In progress |
+| **rustlings** | Rust exercises (learning) | 🎓 In progress |
 
 ## 🚀 Quick Start
 
-### Prérequis
+### Prerequisites
 
 ```bash
-# Installation de Rust
+# Rust installation
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup component add rustfmt clippy
 
-# Sur Ubuntu/Debian
+# On Ubuntu/Debian
 sudo apt-get install -y \
   pkg-config libssl-dev libwayland-dev wayland-protocols \
   libxkbcommon-dev libx11-dev libxcursor-dev libxrandr-dev \
@@ -38,91 +38,91 @@ sudo apt-get install -y \
 ### Build & Run
 
 ```bash
-# Build tous les projets
+# Build all projects
 make build
 
-# Lancer les tests
+# Run tests
 make test
 
-# Vérifications complètes (format + clippy + test)
+# Complete checks (format + clippy + test)
 make check
 
-# Build release
+# Release build
 make release
 ```
 
-### Lancer les applications
+### Run applications
 
 ```bash
-# Démon loggerd (API REST sur port 8080)
+# loggerd daemon (REST API on port 8080)
 make run-loggerd
 
-# Tester les endpoints
+# Test endpoints
 make health-check    # GET /health
 make metrics         # GET /metrics (JSON)
 
-# Arrêter proprement loggerd
-make stop-loggerd    # Envoie SIGTERM (graceful shutdown)
+# Stop loggerd gracefully
+make stop-loggerd    # Send SIGTERM (graceful shutdown)
 
-# Dashboard waydash (interface graphique Wayland)
-make run-waydash     # À venir (Semaine 4)
+# waydash dashboard (Wayland graphical interface)
+make run-waydash     # Coming soon (Week 4)
 ```
 
 ## 🔄 CI/CD
 
-**🐳 Le CI s'exécute entièrement dans Docker pour garantir la reproductibilité.**
+**🐳 CI runs entirely in Docker to ensure reproducibility.**
 
-Le pipeline GitHub Actions utilise `docker/ci.Dockerfile` et automatise :
-- ✅ Vérification du formatage (`cargo fmt --check`)
-- ✅ Linting avec Clippy (mode strict : `-D warnings`)
-- ✅ Tests unitaires et d'intégration
-- ✅ Build release optimisé
-- ✅ Génération des images Docker runtime
+The GitHub Actions pipeline uses `docker/ci.Dockerfile` and automates:
+- ✅ Format checking (`cargo fmt --check`)
+- ✅ Linting with Clippy (strict mode: `-D warnings`)
+- ✅ Unit and integration tests
+- ✅ Optimized release build
+- ✅ Runtime Docker images generation
 
-### Tester le CI localement
+### Test CI locally
 
 ```bash
-# Avec Docker (identique au CI GitHub)
+# With Docker (identical to GitHub CI)
 make docker-build
 
-# Sans Docker (plus rapide)
+# Without Docker (faster)
 make ci-local
 ```
 
-**Temps d'exécution** :
-- Docker (première fois) : ~8-10 min
-- Docker (avec cache) : ~3-5 min  
-- Local sans Docker : ~2 min
+**Execution time**:
+- Docker (first time): ~8-10 min
+- Docker (with cache): ~3-5 min  
+- Local without Docker: ~2 min
 
 ## 🐳 Docker
 
-### Build avec Docker
+### Build with Docker
 
 ```bash
-# Build l'image CI complète (avec tests)
+# Build complete CI image (with tests)
 make docker-build
 
-# Build image runtime loggerd
+# Build loggerd runtime image
 make docker-build-loggerd
 
-# Build image runtime waydash
+# Build waydash runtime image
 make docker-build-waydash
 ```
 
-### Lancer dans Docker
+### Run in Docker
 
 ```bash
-# Loggerd (API REST)
+# loggerd (REST API)
 make docker-run-loggerd
 
-# Waydash (nécessite accès au socket Wayland)
+# waydash (requires Wayland socket access)
 make docker-run-waydash
 ```
 
 ## 📚 Documentation
 
-- **[CI/CD](docs/CI_CD.md)** : Documentation complète du pipeline CI/CD
-- **[TODO](docs/todo.md)** : Feuille de route du projet (10 semaines)
+- **[CI/CD](docs/CI_CD.md)**: Complete CI/CD pipeline documentation
+- **[TODO](docs/todo.md)**: Project roadmap (10 weeks)
 
 ## 🧩 Architecture
 
@@ -141,77 +141,77 @@ make docker-run-waydash
          +------------------ Linux system -------------------+
 ```
 
-## 🛠️ Commandes utiles
+## 🛠️ Useful Commands
 
 ```bash
-# Aide (affiche toutes les commandes disponibles)
+# Help (show all available commands)
 make help
 
 # Build & test
-make build              # Build debug
-make release            # Build release
+make build              # Debug build
+make release            # Release build
 make test               # Tests
-make fmt                # Vérifier formatage
-make fmt-fix            # Corriger formatage
+make fmt                # Check formatting
+make fmt-fix            # Fix formatting
 make clippy             # Linter
-make clean              # Nettoyer
+make clean              # Clean
 
-# Développement
+# Development
 make watch-loggerd      # Auto-reload loggerd
 make watch-waydash      # Auto-reload waydash
-make doc                # Générer docs
-make tree               # Arbre dépendances
+make doc                # Generate docs
+make tree               # Dependency tree
 
 # Installation
-make install            # Installer dans ~/.cargo/bin
+make install            # Install in ~/.cargo/bin
 ```
 
-## 🎯 Objectifs du projet
+## 🎯 Project Objectives
 
-### Semaine 1 : Setup & CI ✅
-- [x] Dockerfile Ubuntu 24.04 multi-stage
-- [x] Pipeline GitHub Actions complet
-- [x] Makefile pour automatisation
-- [x] Documentation CI/CD
+### Week 1: Setup & CI ✅
+- [x] Multi-stage Ubuntu 24.04 Dockerfile
+- [x] Complete GitHub Actions pipeline
+- [x] Makefile for automation
+- [x] CI/CD documentation
 
-### Semaine 2 : Daemon Rust (loggerd) ✅
-- [x] Binaire loggerd avec API HTTP (Axum)
-- [x] Endpoints `/health` et `/metrics`
-- [x] Système de traces personnalisé (console + fichier)
-- [x] Rotation automatique des logs (par taille + timestamp)
-- [x] Gestion des signaux Unix (SIGTERM, SIGHUP)
+### Week 2: Rust Daemon (loggerd) ✅
+- [x] loggerd binary with HTTP API (Axum)
+- [x] `/health` and `/metrics` endpoints
+- [x] Custom trace system (console + file)
+- [x] Automatic log rotation (by size + timestamp)
+- [x] Unix signal handling (SIGTERM, SIGHUP)
 - [x] Graceful shutdown
-- [x] Compteur de logs thread-safe (AtomicU64)
-- [x] Refactoring modulaire (SRP, Clean Architecture)
-- [x] Documentation complète avec doctests
-- [x] Fichier systemd unit
+- [x] Thread-safe log counter (AtomicU64)
+- [x] Modular refactoring (SRP, Clean Architecture)
+- [x] Complete documentation with doctests
+- [x] systemd unit file
 
-**Documentation** :
-- [Récapitulatif Semaine 2](docs/semaine2-recap.md)
-- [Architecture du module file](docs/architecture-file-module.md)
-- [Refactoring file_trace_handlers](docs/refactoring-file-handler.md)
+**Documentation**:
+- [Week 2 Summary](docs/semaine2-recap.md)
+- [File Module Architecture](docs/architecture-file-module.md)
+- [file_trace_handlers Refactoring](docs/refactoring-file-handler.md)
 
-### Semaines suivantes
-- [ ] Semaine 3 : Packaging Ubuntu (Snapcraft)
-- [ ] Semaine 4 : UI Wayland (xdg-shell)
-- [ ] Semaine 5 : UI avancée (layer-shell)
-- [ ] Semaine 6 : Publication lib de traduction
-- [ ] Semaine 7 : Observabilité & performance
-- [ ] Semaine 8 : Open source & article
-- [ ] Semaine 9 : Projet showcase complet
+### Following Weeks
+- [ ] Week 3: Ubuntu packaging (Snapcraft)
+- [ ] Week 4: Wayland UI (xdg-shell)
+- [ ] Week 5: Advanced UI (layer-shell)
+- [ ] Week 6: Translation library publication
+- [ ] Week 7: Observability & performance
+- [ ] Week 8: Open source & article
+- [ ] Week 9: Complete showcase project
 
-Voir [docs/todo.md](docs/todo.md) pour le détail complet.
+See [docs/todo.md](docs/todo.md) for complete details.
 
-## 🔧 Stack technique
+## 🔧 Tech Stack
 
-- **Langage** : Rust (stable)
-- **Build** : Cargo workspace
-- **CI/CD** : GitHub Actions
-- **Containers** : Docker multi-stage
-- **Web** : Axum (API REST)
-- **GUI** : egui + winit (Wayland)
-- **Packaging** : Snap (Ubuntu)
-- **Système** : systemd, journald
+- **Language**: Rust (stable)
+- **Build**: Cargo workspace
+- **CI/CD**: GitHub Actions
+- **Containers**: Docker multi-stage
+- **Web**: Axum (REST API)
+- **GUI**: egui + winit (Wayland)
+- **Packaging**: Snap (Ubuntu)
+- **System**: systemd, journald
 
 ## 📊 Métriques
 
@@ -219,24 +219,24 @@ Voir [docs/todo.md](docs/todo.md) pour le détail complet.
 ![Rust Version](https://img.shields.io/badge/rust-stable-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## 🤝 Contribuer
+## 🤝 Contributing
 
-Les contributions sont les bienvenues ! Ce projet fait partie d'un parcours d'apprentissage, n'hésitez pas à :
-- Proposer des améliorations
-- Signaler des bugs
-- Partager des idées
+Contributions are welcome! This project is part of a learning journey, feel free to:
+- Propose improvements
+- Report bugs
+- Share ideas
 
 ## 📝 License
 
-MIT License - voir [LICENSE](LICENSE) pour plus de détails.
+MIT License - see [LICENSE](LICENSE) for more details.
 
-## 👤 Auteur
+## 👤 Author
 
 **CharlyMaye**
 
 - GitHub: [@CharlyMaye](https://github.com/CharlyMaye)
-- Projet : Parcours Rust/Linux/Wayland
+- Project: Rust/Linux/Wayland Journey
 
 ---
 
-**Note** : Ce projet est actuellement en développement actif dans le cadre d'un parcours d'apprentissage de 10 semaines sur Rust système et Linux.
+**Note**: This project is currently under active development as part of a 10-week learning journey on system Rust and Linux.
