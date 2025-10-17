@@ -4,7 +4,7 @@ set -e
 echo "🚀 Commit Week 1 - CI/CD"
 echo ""
 
-# Afficher les fichiers
+# Display files
 git status --short
 
 echo ""
