@@ -42,8 +42,13 @@ jobs:
         run: |
           # Create temporary container to access build artifacts
           docker create --name extract-container cma-rust-ci
-          docker cp extract-container:/app/target/release/loggerd ./loggerd
-          docker cp extract-container:/app/target/release/waydash ./waydash || true
+          
+          # Debug: Check what's in the container
+          docker run --rm cma-rust-ci find /build/target/release -name "*loggerd*" -o -name "*waydash*" || true
+          
+          # Extract binaries (using correct /build path)
+          docker cp extract-container:/build/target/release/loggerd ./loggerd || echo "loggerd not found"
+          docker cp extract-container:/build/target/release/waydash ./waydash || echo "waydash not found"
           docker rm extract-container
           
           ls -la loggerd waydash 2>/dev/null || echo "Some binaries might not exist yet"

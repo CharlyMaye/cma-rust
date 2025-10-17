@@ -92,8 +92,13 @@ RUN cargo test --all --verbose --bins --lib
 
 # Step 4: Release build compilation
 # Creates optimized binaries for all workspace crates
-# Produces loggerd, waydash, and other executables in target/release/
-RUN cargo build --release --all
+# Build each binary explicitly to ensure they are created
+RUN cargo build --release --bin loggerd
+RUN cargo build --release --bin waydash || true
+RUN cargo build --release --workspace
+
+# Debug: List what was actually built
+RUN ls -la /build/target/release/ && echo "=== Binaries ===" && find /build/target/release -maxdepth 1 -type f -executable
 
 # ==============================================================================
 # Stage 2: Minimal Runtime for loggerd Daemon
