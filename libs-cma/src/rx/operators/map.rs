@@ -4,24 +4,26 @@ use crate::rx::observable::Observable;
 use crate::rx::observer::Observer;
 use crate::rx::teardown::TeardownLogic;
 
+// TODO - refactoriser la partie sync et async sur une prochaine PR
+#[allow(dead_code)]
 impl<TValue, TError> Observable<TValue, TError>
 where
     TValue: 'static + Send,
     TError: 'static + Send,
 {
     /// Transforme chaque valeur émise par l'Observable source.
-    /// 
+    ///
     /// L'opérateur `map` applique une fonction de transformation à chaque valeur
     /// émise par l'Observable source et émet le résultat.
-    /// 
+    ///
     /// # Exécution lazy
     /// Cet opérateur ne s'exécute que lors de l'appel à `subscribe()`.
     /// Il crée un nouvel Observable sans déclencher la source.
-    /// 
+    ///
     /// # Exemples
     /// ```
     /// use cma::rx::Observable;
-    /// 
+    ///
     /// let observable = Observable::new(|observer| {
     ///     (observer.next)(1);
     ///     (observer.next)(2);
@@ -31,7 +33,7 @@ where
     /// })
     /// .map(|x| x * 2)
     /// .map(|x| x + 1);
-    /// 
+    ///
     /// // Rien ne s'exécute avant subscribe()
     /// observable.subscribe(
     ///     |x| println!("{}", x), // Affichera: 3, 5, 7
@@ -39,10 +41,10 @@ where
     ///     || println!("Complété"),
     /// );
     /// ```
-    /// 
+    ///
     /// # Paramètres
     /// - `mapper`: Fonction de transformation `Fn(TValue) -> U`
-    /// 
+    ///
     /// # Retour
     /// Un nouvel `Observable<U, TError>` qui émet les valeurs transformées
     pub fn map<U, F>(self, mapper: F) -> Observable<U, TError>
@@ -59,12 +61,9 @@ where
                 Observable {
                     teardown: TeardownLogic::from_sync(move |observer: &Observer<U, TError>| {
                         let mapper = Arc::clone(&mapper);
-                        
+
                         // Création de l'Observer intermédiaire qui applique la transformation
-                        let inner_observer = create_mapping_observer(
-                            observer,
-                            mapper,
-                        );
+                        let inner_observer = create_mapping_observer(observer, mapper);
 
                         // Subscribe à la source
                         source_fn(&inner_observer)
@@ -75,12 +74,9 @@ where
                 Observable {
                     teardown: TeardownLogic::from_async(move |observer: Observer<U, TError>| {
                         let mapper = Arc::clone(&mapper);
-                        
+
                         // Création de l'Observer intermédiaire qui applique la transformation
-                        let inner_observer = create_mapping_observer_owned(
-                            observer,
-                            mapper,
-                        );
+                        let inner_observer = create_mapping_observer_owned(observer, mapper);
 
                         // Subscribe à la source (async)
                         source_fn(inner_observer)
@@ -150,8 +146,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::{Arc, Mutex};
-    use crate::rx::observable::Subscribable; // Importer le trait
+    use crate::rx::observable::Subscribable;
+    use std::sync::{Arc, Mutex}; // Importer le trait
 
     #[test]
     fn test_map_simple() {
@@ -232,4 +228,3 @@ mod tests {
         assert!((res[1] - 6.666666).abs() < 0.001);
     }
 }
-

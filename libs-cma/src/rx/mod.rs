@@ -1,8 +1,8 @@
 //https://refactoring.guru/design-patterns/observer
 pub mod observable;
 pub mod observer;
-pub mod teardown;
 pub mod operators;
+pub mod teardown;
 
 pub fn test_rx() {}
 
@@ -10,7 +10,7 @@ pub fn test_rx() {}
 mod tests {
     use super::observable::*;
     use super::observer::*;
-    use super::*;
+
     use std::sync::mpsc;
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
@@ -142,17 +142,16 @@ mod tests {
 
     #[test]
     fn test_unsubscribe_stops_callbacks() {
-        let mut obs =
-            Observable::with_async_teardown(|obs: Observer<String, String>| async move {
-                let mut i = 0;
-                while obs.is_active() {
-                    (obs.next)(format!("msg {}", i));
-                    i += 1;
-                    std::thread::sleep(Duration::from_millis(50));
-                }
-                (obs.complete)();
-                Ok(())
-            });
+        let mut obs = Observable::with_async_teardown(|obs: Observer<String, String>| async move {
+            let mut i = 0;
+            while obs.is_active() {
+                (obs.next)(format!("msg {}", i));
+                i += 1;
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            (obs.complete)();
+            Ok(())
+        });
 
         let (tx, rx) = mpsc::channel::<String>();
 
@@ -173,22 +172,24 @@ mod tests {
 
         // vérifier qu'on ne reçoit plus rien
         let result = rx.recv_timeout(Duration::from_millis(200));
-        assert!(result.is_err(), "Should not receive messages after unsubscribe");
+        assert!(
+            result.is_err(),
+            "Should not receive messages after unsubscribe"
+        );
     }
 
     #[test]
     fn test_unsubscribe_and_wait() {
-        let mut obs =
-            Observable::with_async_teardown(|obs: Observer<String, String>| async move {
-                let mut i = 0;
-                while obs.is_active() {
-                    (obs.next)(format!("msg {}", i));
-                    i += 1;
-                    std::thread::sleep(Duration::from_millis(30));
-                }
-                (obs.complete)();
-                Ok(())
-            });
+        let mut obs = Observable::with_async_teardown(|obs: Observer<String, String>| async move {
+            let mut i = 0;
+            while obs.is_active() {
+                (obs.next)(format!("msg {}", i));
+                i += 1;
+                std::thread::sleep(Duration::from_millis(30));
+            }
+            (obs.complete)();
+            Ok(())
+        });
 
         let (tx, rx) = mpsc::channel::<String>();
 
@@ -212,10 +213,10 @@ mod tests {
     #[test]
     fn test_multiple_subscribers() {
         let mut obs = create_sync_observable();
-        
+
         let value1 = Arc::new(Mutex::new(String::new()));
         let value2 = Arc::new(Mutex::new(String::new()));
-        
+
         let v1_clone = value1.clone();
         let v2_clone = value2.clone();
 

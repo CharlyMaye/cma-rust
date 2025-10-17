@@ -22,7 +22,7 @@ impl<TValue, TError> Clone for Observer<TValue, TError> {
         }
     }
 }
-
+#[allow(dead_code)]
 impl<TValue, TError> Observer<TValue, TError> {
     /// helper to check if this observer is still active (confinement de l'accès au token)
     pub fn is_active(&self) -> bool {

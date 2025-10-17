@@ -18,11 +18,12 @@ use crate::rx::teardown::TeardownLogic;
 // est lancée en arrière-plan (async). On utilise une struct contenant Option<JoinHandle>
 // pour pouvoir prendre le handle (Option::take) sans déplacer un champ d'un type qui
 // implémente Drop (évite l'erreur "cannot move out of type ... which implements Drop").
+#[allow(dead_code)]
 pub struct Unsubscribable {
     handle: Option<std::thread::JoinHandle<()>>,
     active: Arc<AtomicBool>,
 }
-
+#[allow(dead_code)]
 impl Unsubscribable {
     pub fn ready() -> Self {
         Unsubscribable {
@@ -82,12 +83,13 @@ impl Drop for Unsubscribable {
     }
 }
 
-
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Observable<TValue: 'static, TError: 'static> {
     // TODO - protected?
     pub teardown: TeardownLogic<TValue, TError>,
 }
+#[allow(dead_code)]
 impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     pub fn new<F>(f: F) -> Self
     where
@@ -111,9 +113,8 @@ impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     }
 }
 
-/// PIPE ///
-
 /// SUBSCRIBE ///
+#[allow(dead_code)]
 pub trait Subscribable<TValue, TError> {
     // subscribe prend directement trois closures ; permet d'éviter Arc::new(...) côté appelant.
     fn subscribe<N, E, C>(&mut self, next: N, error: E, complete: C) -> Unsubscribable
@@ -242,19 +243,24 @@ where
     }
 }
 
-
 // no-op RawWaker callbacks (they must have unsafe fn signatures)
+#[allow(dead_code)]
 unsafe fn noop_clone(data: *const ()) -> RawWaker {
     RawWaker::new(data, &RAW_WAKER_VTABLE)
 }
+#[allow(dead_code)]
 unsafe fn noop_wake(_data: *const ()) {}
+#[allow(dead_code)]
 unsafe fn noop_wake_by_ref(_data: *const ()) {}
+#[allow(dead_code)]
 unsafe fn noop_drop(_data: *const ()) {}
 
+#[allow(dead_code)]
 static RAW_WAKER_VTABLE: RawWakerVTable =
     RawWakerVTable::new(noop_clone, noop_wake, noop_wake_by_ref, noop_drop);
 
 // helper that confines the single unsafe needed to create a Waker
+#[allow(dead_code)]
 fn create_noop_waker() -> Waker {
     let raw = RawWaker::new(ptr::null(), &RAW_WAKER_VTABLE);
     unsafe { Waker::from_raw(raw) }
@@ -262,6 +268,7 @@ fn create_noop_waker() -> Waker {
 
 /// Drive a boxed future to completion on a background thread, using a noop waker.
 /// Returns the JoinHandle so the caller can wait if desired.
+#[allow(dead_code)]
 fn spawn_driven_future<TValue, TError>(
     mut fut: Pin<Box<dyn Future<Output = Result<(), TError>> + Send>>,
     cb_for_err: Observer<TValue, TError>,
