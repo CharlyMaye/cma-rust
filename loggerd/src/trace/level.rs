@@ -1,23 +1,33 @@
 use std::fmt::Display;
 
-// L'énuméré est simple (sans données heap) et stocké dans la stack.
-// On utilise Copy au lieu de passer par référence (&TraceLevel) car :
-// - Copy d'un enum simple = copie de quelques octets (taille d'un discriminant)
-// - Référence = copie d'un pointeur (8 octets sur 64-bit) + indirection mémoire
-// - Copy est plus performant : pas de déréférencement, accès direct à la valeur
-// - Copy est plus idiomatique en Rust pour les types primitifs/simples
-// - Simplifie le code : pas de & partout, pas de gestion de lifetime
+/// Enumeration of trace levels for logging.
+/// 
+/// This enum is simple (no heap data) and stored on the stack.
+/// We use Copy instead of passing by reference (&TraceLevel) because:
+/// - Copy of a simple enum = copy of a few bytes (size of a discriminant)
+/// - Reference = copy of a pointer (8 bytes on 64-bit) + memory indirection
+/// - Copy is more performant: no dereferencing, direct access to value
+/// - Copy is more idiomatic in Rust for primitive/simple types
+/// - Simplifies code: no & everywhere, no lifetime management
 #[derive(Debug, Copy, Clone)]
-#[allow(dead_code)] // Tous les niveaux font partie de l'API publique
+#[allow(dead_code)] // All levels are part of the public API
 pub enum TraceLevel {
+    /// Verbose logging - most detailed
     Verbose,
+    /// Debug information
     Debug,
+    /// General information
     Info,
+    /// Warning messages
     Warning,
+    /// Error messages
     Error,
+    /// Critical errors
     Critical,
+    /// No logging
     None,
 }
+
 impl Display for TraceLevel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let level_str = match self {
