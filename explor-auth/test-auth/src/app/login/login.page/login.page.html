@@ -1,20 +1,20 @@
-<mat-card class="example-card" appearance="outlined">
-  <mat-card-header>
+<mat-card class="cma-card-container" appearance="outlined">
+  <mat-card-header class="cma-card-header">
     <mat-card-title>
         Connexion
     </mat-card-title>
   </mat-card-header>
-  <mat-card-content>
+  <mat-card-content class="cma-card-content">
       <p>Vous devez vous connecter pour accéder à cette page.</p>
-      <p class="return-info">
+      <p class="">
       Après connexion, vous serez redirigé vers : <strong>{{ returnUrl }}</strong>
       </p>
     </mat-card-content>
-    <mat-card-actions align="end">
-        <button matButton (click)="login()" class="login-button">
+    <mat-card-actions align="end" class="cma-card-actions">
+        <button matButton (click)="login()" class="">
             Se connecter
         </button>
     </mat-card-actions>
-    <mat-card-footer class="example-card-footer">
+    <mat-card-footer class="cma-card-footer">
     </mat-card-footer>
 </mat-card>

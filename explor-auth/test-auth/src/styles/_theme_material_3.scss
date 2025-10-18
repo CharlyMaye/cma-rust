@@ -8,6 +8,7 @@
 @use "./utils";
 @use "./sidenav";
 @use "./toolbar";
+@use "./card";
 
 html {
   @include mat.theme((
