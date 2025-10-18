@@ -45,15 +45,46 @@ impl MongoConnection {
     async fn initialize_collections(&self) -> Result<(), mongodb::error::Error> {
         let collection_names = self.database.list_collection_names().await?;
         
-        // Liste des collections requises
-        let required_collections = vec!["documents", "users"];
-        
-        for collection_name in required_collections {
-            if !collection_names.contains(&collection_name.to_string()) {
-                println!("📝 Creating collection: {}", collection_name);
-                self.database.create_collection(collection_name).await?;
-            }
+        // Initialiser la collection documents
+        if !collection_names.contains(&"documents".to_string()) {
+            self.create_documents_collection().await?;
         }
+        
+        // Initialiser la collection users
+        if !collection_names.contains(&"users".to_string()) {
+            self.create_users_collection().await?;
+        }
+        
+        Ok(())
+    }
+    
+    async fn create_documents_collection(&self) -> Result<(), mongodb::error::Error> {
+        use mongodb::bson::doc;
+        use mongodb::options::IndexOptions;
+        use mongodb::IndexModel;
+        
+        println!("📝 Creating collection: documents");
+        self.database.create_collection("documents").await?;
+        
+        // Créer un index unique sur doc_id
+        let documents_collection = self.database.collection::<mongodb::bson::Document>("documents");
+        let index_options = IndexOptions::builder().unique(true).build();
+        let index_model = IndexModel::builder()
+            .keys(doc! { "doc_id": 1 })
+            .options(index_options)
+            .build();
+        
+        documents_collection.create_index(index_model).await?;
+        println!("📌 Index unique créé sur 'doc_id'");
+        
+        Ok(())
+    }
+    
+    async fn create_users_collection(&self) -> Result<(), mongodb::error::Error> {
+        println!("📝 Creating collection: users");
+        self.database.create_collection("users").await?;
+        
+        // Ici, on pourrait ajouter des index pour la collection users si nécessaire
         
         Ok(())
     }

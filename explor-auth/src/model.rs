@@ -7,8 +7,6 @@ use crate::documents::data_provider::DocumentDataProvider;
 use crate::db::MongoConnection;
 
 pub struct AppState {
-    pub app_name: String,
-    pub counter: Mutex<i32>,
     pub sessions: Mutex<HashMap<String, Session>>,
     pub db: Database,
 }
@@ -19,8 +17,6 @@ impl AppState {
         let mongo_connection = MongoConnection::new().await?;
         
         Ok(AppState {
-            app_name: "My Actix-web App".into(),
-            counter: Mutex::new(0),
             sessions: Mutex::new(HashMap::new()),
             db: mongo_connection.database().clone(),
         })
