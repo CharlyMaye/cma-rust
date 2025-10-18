@@ -1,4 +1,4 @@
-use mongodb::{bson::oid::ObjectId, Collection, Database};
+use mongodb::{Collection, Database};
 use futures::TryStreamExt;
 
 use super::model::DocumentMongo;
@@ -66,17 +66,13 @@ impl DocumentDataProvider {
         Ok(result)
     }
 
-    pub async fn update_document(&self, id: &str, updated_doc: DocumentMongo) -> Result<bool, DataProviderError> {
+    pub async fn update_document(&self, doc_id: &str, content: String) -> Result<bool, DataProviderError> {
         use mongodb::bson::doc;
         
-        let object_id = ObjectId::parse_str(id)
-            .map_err(|_| DataProviderError::InvalidObjectId(id.to_string()))?;
-            
-        let filter = doc! { "_id": object_id };
+        let filter = doc! { "doc_id": doc_id };
         let update_doc = doc! { 
             "$set": {
-                "doc_id": updated_doc.doc_id,
-                "content": updated_doc.content,
+                "content": content,
             }
         };
         
@@ -84,13 +80,10 @@ impl DocumentDataProvider {
         Ok(result.modified_count > 0)
     }
 
-    pub async fn delete_document(&self, id: &str) -> Result<bool, DataProviderError> {
+    pub async fn delete_document(&self, doc_id: &str) -> Result<bool, DataProviderError> {
         use mongodb::bson::doc;
         
-        let object_id = ObjectId::parse_str(id)
-            .map_err(|_| DataProviderError::InvalidObjectId(id.to_string()))?;
-            
-        let filter = doc! { "_id": object_id };
+        let filter = doc! { "doc_id": doc_id };
         let result = self.collection.delete_one(filter).await?;
         Ok(result.deleted_count > 0)
     }

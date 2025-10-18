@@ -11,13 +11,30 @@ pub struct DocumentMongo {
     pub content: String,
 }
 
-// DTO pour l'API (externe)
+// ============ DTOs (Data Transfer Objects) ============
+
+// DTO Response - Ce qui est retourné par l'API
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Document {
-    pub id: String,
+pub struct DocumentResponse {
+    pub id: String,          // _id MongoDB en hex
+    pub doc_id: String,      // Identifiant métier unique
+    pub content: String,
+}
+
+// DTO Request - Pour créer un document
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateDocumentRequest {
     pub doc_id: String,
     pub content: String,
 }
+
+// DTO Request - Pour mettre à jour un document
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UpdateDocumentRequest {
+    pub content: String,     // On ne peut pas changer le doc_id (c'est l'identifiant unique)
+}
+
+// ============ Implementations ============
 
 impl DocumentMongo {
     pub fn new(doc_id: String, content: String) -> Self {
@@ -28,9 +45,9 @@ impl DocumentMongo {
         }
     }
 
-    // Convertir de DocumentMongo vers Document (DTO)
-    pub fn to_document(&self) -> Document {
-        Document {
+    // Convertir de DocumentMongo vers DocumentResponse (DTO)
+    pub fn to_response(&self) -> DocumentResponse {
+        DocumentResponse {
             id: self.id
                 .as_ref()
                 .map(|oid| oid.to_hex())
@@ -39,24 +56,6 @@ impl DocumentMongo {
             content: self.content.clone(),
         }
     }
-}
-
-impl Document {
-    // Convertir de Document (DTO) vers DocumentMongo
-    pub fn to_mongo(&self) -> DocumentMongo {
-        DocumentMongo {
-            id: None, // L'ID sera géré par MongoDB
-            doc_id: self.doc_id.clone(),
-            content: self.content.clone(),
-        }
-    }
-}
-
-// Request pour créer un document
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CreateDocumentRequest {
-    pub doc_id: String,
-    pub content: String,
 }
 
 impl From<CreateDocumentRequest> for DocumentMongo {
