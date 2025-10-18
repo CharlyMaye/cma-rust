@@ -1,12 +1,36 @@
 use actix_web::{web, HttpResponse, Responder, HttpRequest, cookie::Cookie};
 use uuid::Uuid;
-use chrono::{ Utc};
+use chrono::Utc;
+use serde::Serialize;
+use utoipa::{self, ToSchema};
 
-use crate::{authentication::{model::{LoginCredentials, LoginResponse}, utils, Session}, model::AppState};
+use crate::{
+    authentication::{model::{LoginCredentials, SessionData}, utils, Session}, 
+    model::AppState,
+    common::{ApiResponse, ErrorResponse},
+};
 
 
 
-// Login handler
+/// Authentification de l'utilisateur
+/// 
+/// Valide les identifiants et crée une session. Retourne un cookie `session_id`
+/// qui doit être utilisé pour les requêtes authentifiées.
+#[utoipa::path(
+    post,
+    path = "/api/auth/login",
+    tag = "Authentication",
+    request_body = LoginCredentials,
+    responses(
+        (status = 200, description = "Authentification réussie - Cookie session_id défini", 
+            body = inline(ApiResponse<SessionData>),
+            headers(
+                ("Set-Cookie" = String, description = "Cookie de session (session_id)")
+            )
+        ),
+        (status = 401, description = "Identifiants invalides", body = ErrorResponse)
+    )
+)]
 pub async fn log_in(
     credentials: web::Json<LoginCredentials>,
     data: web::Data<AppState>,
@@ -20,10 +44,8 @@ pub async fn log_in(
     // 2- valider les credentials
     if !utils::validate_credentials(&creds.user, &creds.password) {
         println!("   ❌ Échec d'authentification pour {}", creds.user);
-        return HttpResponse::Unauthorized().json(LoginResponse {
-            message: "Invalid credentials".to_string(),
-            success: false,
-        });
+        let error = ErrorResponse::new("Invalid credentials");
+        return HttpResponse::Unauthorized().json(error);
     }
     
     println!("   ✅ Authentification réussie pour {}", creds.user);
@@ -36,6 +58,8 @@ pub async fn log_in(
         created_at: now,
         expires_at: now + chrono::Duration::hours(24), // Session expire dans 24h
     };
+    
+    let session_data = session.to_data();
     
     // Stocker la session
     if let Ok(mut sessions) = data.sessions.lock() {
@@ -55,15 +79,28 @@ pub async fn log_in(
     
     println!("   🍪 Cookie créé: session_id={} (Max-Age: 24h, SameSite: Lax, Secure: false)", session_id);
     
+    let response = ApiResponse::success_with_message(session_data, "Login successful");
+    
     HttpResponse::Ok()
         .cookie(cookie)
-        .json(LoginResponse {
-            message: "Login successful".to_string(),
-            success: true,
-        })
+        .json(response)
 }
 
-// Endpoint pour vérifier si une session est valide
+/// Vérifie si une session est valide
+/// 
+/// Valide le cookie de session et retourne les informations de session si valide.
+#[utoipa::path(
+    get,
+    path = "/api/auth/verify",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "Session valide", body = inline(ApiResponse<SessionData>)),
+        (status = 401, description = "Session invalide ou expirée", body = ErrorResponse)
+    ),
+    security(
+        ("session_cookie" = [])
+    )
+)]
 pub async fn verify_session(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -79,10 +116,8 @@ pub async fn verify_session(
         },
         None => {
             println!("   ❌ Aucun cookie de session trouvé");
-            return HttpResponse::Unauthorized().json(LoginResponse {
-                message: "No session cookie found".to_string(),
-                success: false,
-            });
+            let error = ErrorResponse::new("No session cookie found");
+            return HttpResponse::Unauthorized().json(error);
         }
     };
 
@@ -92,10 +127,9 @@ pub async fn verify_session(
         if let Some(session) = sessions.get(&session_id) {
             if session.expires_at > Utc::now() {
                 println!("   ✅ Session valide pour: {}", session.user_id);
-                return HttpResponse::Ok().json(LoginResponse {
-                    message: format!("Session valid for user: {}", session.user_id),
-                    success: true,
-                });
+                let session_data = session.to_data();
+                let response = ApiResponse::success(session_data);
+                return HttpResponse::Ok().json(response);
             } else {
                 println!("   ⏰ Session expirée pour: {}", session.user_id);
             }
@@ -104,12 +138,31 @@ pub async fn verify_session(
         }
     }
     
-    HttpResponse::Unauthorized().json(LoginResponse {
-        message: "Invalid or expired session".to_string(),
-        success: false,
-    })
+    let error = ErrorResponse::new("Invalid or expired session");
+    HttpResponse::Unauthorized().json(error)
 }
 
+/// Déconnexion de l'utilisateur
+/// 
+/// Invalide la session côté serveur et supprime le cookie.
+#[derive(Serialize, ToSchema)]
+struct LogoutData {
+    /// Indique si une session a été trouvée
+    #[schema(example = true)]
+    session_found: bool,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/auth/logout",
+    tag = "Authentication",
+    responses(
+        (status = 200, description = "Déconnexion réussie", body = inline(ApiResponse<LogoutData>)),
+    ),
+    security(
+        ("session_cookie" = [])
+    )
+)]
 pub async fn log_out(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -140,17 +193,20 @@ pub async fn log_out(
             .max_age(actix_web::cookie::time::Duration::seconds(0))
             .finish();
         
+        let response = ApiResponse::success_with_message(
+            LogoutData { session_found: true },
+            "Logout successful"
+        );
+        
         return HttpResponse::Ok()
             .cookie(expire_cookie)
-            .json(LoginResponse {
-                message: "Logout successful".to_string(),
-                success: true,
-            });
+            .json(response);
     }
     
     println!("   ⚠️  Aucun cookie de session trouvé pour logout");
-    HttpResponse::Ok().json(LoginResponse {
-        message: "No active session found".to_string(),
-        success: true,
-    })
+    let response = ApiResponse::success_with_message(
+        LogoutData { session_found: false },
+        "No active session found"
+    );
+    HttpResponse::Ok().json(response)
 }

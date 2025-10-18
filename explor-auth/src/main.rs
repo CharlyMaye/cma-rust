@@ -9,16 +9,23 @@ mod model;
 mod config;
 mod db;
 mod middleware;
+mod common;
 
 use crate::model::AppState;
 use crate::config::Config;
 use crate::documents::model::{DocumentResponse, CreateDocumentRequest, UpdateDocumentRequest};
-use crate::documents::response::{ApiResponse, ErrorResponse, ResponseMetadata};
+use crate::authentication::model::{LoginCredentials, SessionData};
+use crate::common::{ApiResponse, ErrorResponse, ResponseMetadata};
 
-/// Spécification OpenAPI pour l'API Documents
+/// Spécification OpenAPI pour l'API complète
 #[derive(OpenApi)]
 #[openapi(
     paths(
+        // Routes d'authentification
+        authentication::control::log_in,
+        authentication::control::verify_session,
+        authentication::control::log_out,
+        // Routes documents
         documents::control::get_documents,
         documents::control::get_document_by_id,
         documents::control::create_document,
@@ -27,9 +34,15 @@ use crate::documents::response::{ApiResponse, ErrorResponse, ResponseMetadata};
     ),
     components(
         schemas(
+            // Modèles d'authentification
+            LoginCredentials,
+            SessionData,
+            // Modèles de documents
             DocumentResponse,
             CreateDocumentRequest,
             UpdateDocumentRequest,
+            // Réponses API
+            ApiResponse<SessionData>,
             ApiResponse<DocumentResponse>,
             ApiResponse<Vec<DocumentResponse>>,
             ErrorResponse,
@@ -37,12 +50,14 @@ use crate::documents::response::{ApiResponse, ErrorResponse, ResponseMetadata};
         )
     ),
     tags(
-        (name = "Documents", description = "API de gestion des documents")
+        (name = "Authentication", description = "Authentification et gestion des sessions"),
+        (name = "Documents", description = "API de gestion des documents (requiert authentification)")
     ),
+    modifiers(&SecurityAddon),
     info(
-        title = "Documents API",
+        title = "Explor Auth API",
         version = "1.0.0",
-        description = "API REST pour la gestion des documents avec authentification",
+        description = "API REST avec authentification par cookie de session",
         contact(
             name = "API Support",
             email = "support@example.com"
@@ -50,6 +65,22 @@ use crate::documents::response::{ApiResponse, ErrorResponse, ResponseMetadata};
     )
 )]
 struct ApiDoc;
+
+/// Configuration de sécurité pour Swagger UI
+struct SecurityAddon;
+
+impl utoipa::Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        use utoipa::openapi::security::*;
+        
+        if let Some(components) = openapi.components.as_mut() {
+            components.add_security_scheme(
+                "session_cookie",
+                SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("session_id")))
+            );
+        }
+    }
+}
 
 
 #[actix_web::main]

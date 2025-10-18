@@ -2,8 +2,8 @@ use actix_web::{web, HttpResponse, Result};
 use utoipa;
 
 use crate::model::AppState;
+use crate::common::{ApiResponse, ErrorResponse};
 use super::model::{CreateDocumentRequest, UpdateDocumentRequest, DocumentResponse};
-use super::response::{ApiResponse, ErrorResponse};
 
 /// Récupère tous les documents
 /// 

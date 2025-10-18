@@ -6,7 +6,8 @@ use utoipa::ToSchema;
 /// Toutes les réponses de succès suivent ce format avec des données
 /// et des métadonnées séparées.
 #[derive(Debug, Serialize, ToSchema)]
-pub struct ApiResponse<T> {
+#[serde(bound = "T: Serialize")]
+pub struct ApiResponse<T: Serialize> {
     /// Les données de la réponse
     pub data: T,
     
@@ -44,6 +45,14 @@ impl ResponseMetadata {
         }
     }
 
+    pub fn success_with_message(message: impl Into<String>) -> Self {
+        Self {
+            status: "success".to_string(),
+            message: Some(message.into()),
+            count: None,
+        }
+    }
+
     pub fn success_with_count(count: usize) -> Self {
         Self {
             status: "success".to_string(),
@@ -61,11 +70,18 @@ impl ResponseMetadata {
     }
 }
 
-impl<T> ApiResponse<T> {
+impl<T: Serialize> ApiResponse<T> {
     pub fn success(data: T) -> Self {
         Self {
             data,
             metadata: ResponseMetadata::success(),
+        }
+    }
+
+    pub fn success_with_message(data: T, message: impl Into<String>) -> Self {
+        Self {
+            data,
+            metadata: ResponseMetadata::success_with_message(message),
         }
     }
 
