@@ -98,11 +98,7 @@ async fn main() -> std::io::Result<()> {
     );
 
     // Initialiser l'AppState avec MongoDB
-    let app_state = web::Data::new(
-        AppState::new()
-            .await
-            .map_err(std::io::Error::other)?,
-    );
+    let app_state = web::Data::new(AppState::new().await.map_err(std::io::Error::other)?);
 
     let server_host = config.server.host.clone();
     let server_port = config.server.port;
