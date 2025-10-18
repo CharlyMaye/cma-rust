@@ -1,41 +1,12 @@
 use actix_web::{web, HttpResponse, Responder, HttpRequest, cookie::Cookie};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use base64::{Engine as _, engine::general_purpose};
-use chrono::{DateTime, Utc};
+use chrono::{ Utc};
 
-use crate::model::AppState;
+use crate::{authentication::model::{LoginCredentials, LoginResponse}, model::AppState};
 
-#[derive(Deserialize)]
-pub struct LoginCredentials {
-    user: String,
-    password: String,
-}
-
-#[derive(Serialize)]
-struct LoginResponse {
-    message: String,
-    success: bool,
-}
-
-#[derive(Clone)]
-pub struct Session {
-    user_id: String,
-    created_at: DateTime<Utc>,
-    expires_at: DateTime<Utc>,
-}
-
-// Fonction pour encoder le mot de passe en Base64 (comme côté front-end)
-fn encode_password(password: &str) -> String {
-    general_purpose::STANDARD.encode(password.as_bytes())
-}
-
-// Fonction pour valider les credentials
-fn validate_credentials(user: &str, password: &str) -> bool {
-    // Validation simple : user = "test", password = hash de "test"
-    let expected_password_hash = encode_password("test");
-    user == "test" && password == expected_password_hash
-}
+mod utils;
+mod model;
+pub use model::Session;
 
 // Login handler
 pub async fn log_in(
@@ -49,7 +20,7 @@ pub async fn log_in(
     println!("   👤 User: {}", creds.user);
     
     // 2- valider les credentials
-    if !validate_credentials(&creds.user, &creds.password) {
+    if !utils::validate_credentials(&creds.user, &creds.password) {
         println!("   ❌ Échec d'authentification pour {}", creds.user);
         return HttpResponse::Unauthorized().json(LoginResponse {
             message: "Invalid credentials".to_string(),
