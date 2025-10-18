@@ -27,14 +27,13 @@ export class LoginPage implements OnInit {
       return;
     }
     // Récupère l'URL de retour depuis les paramètres de query
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+    this.returnUrl = this.route.snapshot.queryParams?.['returnUrl'] || '/';
     console.log('Login page - Return URL:', this.returnUrl);
   }
 
   login() {
     console.log('Attempting login...');
-    this.auth.login();
-    console.log('Login successful, redirecting to:', this.returnUrl);
-    this.router.navigate([this.returnUrl]);
+    this.auth.login(this.returnUrl);
+
   }
 }

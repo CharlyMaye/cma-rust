@@ -1,5 +1,6 @@
 use std::sync::Mutex;
 
+use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
 struct AppState {
@@ -16,13 +17,22 @@ async fn main() -> std::io::Result<()> {
     });
 
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:4200")
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![
+                actix_web::http::header::AUTHORIZATION,
+            ])
+            .allowed_header(actix_web::http::header::CONTENT_TYPE)
+            .max_age(3600);
+
         App::new()
+            .wrap(cors)
             .app_data(app_state.clone())
-            .service(hello)
-            .service(echo)
             .service(
-                web::scope("/app")
-                .route("/index.html", web::get().to(index))
+                web::scope("api/auth")
+                    .route("/login", web::post().to(log_in))
+                    .route("/logout", web::post().to(log_out))
             )
             .route("/hey", web::get().to(manuel_hello))
     })
@@ -31,23 +41,15 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-#[get("/")]
-async fn hello() -> impl Responder{
-    HttpResponse::Ok().body("Hello from Actix-web!")
-}
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
+
 async fn manuel_hello() -> impl Responder {
     HttpResponse::Ok().body("Hello from Manuel!")
 }
 
-
-async fn index(data: web::Data<AppState>) -> impl Responder {
-    let app_name = &data.app_name;
-    let mut counter = data.counter.lock().unwrap();
-    *counter += 1;
-    let response = format!("Welcome to {}'s index page! Request number: {}", app_name, counter);
-    HttpResponse::Ok().body(response)
+// Login handler
+async fn log_in() -> impl Responder {
+    HttpResponse::Ok().body("{\"message\": \"Login endpoint\"}")
+}
+async fn log_out() -> impl Responder {
+    HttpResponse::Ok().body("{\"message\": \"Logout endpoint\"}")
 }
