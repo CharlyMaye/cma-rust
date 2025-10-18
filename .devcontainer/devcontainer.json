@@ -13,7 +13,10 @@
 				"serayuzgur.crates",
 				"mhutchie.git-graph",
 				"usernamehw.errorlens",
-				"vadimcn.vscode-lldb"
+				"vadimcn.vscode-lldb",
+				"Angular.ng-template",
+				"esbenp.prettier-vscode",
+				"dbaeumer.vscode-eslint"
 			]
 		}
 	},
