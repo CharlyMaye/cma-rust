@@ -1,10 +1,10 @@
 use std::sync::Mutex;
 use std::collections::HashMap;
-use mongodb::{Client, Database};
+use mongodb::Database;
 
 use crate::authentication::Session;
 use crate::documents::data_provider::DocumentDataProvider;
-use crate::config::DatabaseConfig;
+use crate::db::MongoConnection;
 
 pub struct AppState {
     pub app_name: String,
@@ -15,19 +15,14 @@ pub struct AppState {
 
 impl AppState {
     pub async fn new() -> Result<Self, mongodb::error::Error> {
-        let config = DatabaseConfig::from_env();
-        let client = Client::with_uri_str(&config.uri).await?;
-        let database = client.database(&config.database_name);
-        
-        // Test de la connexion
-        client.list_database_names().await?;
-        println!("✅ Connected to MongoDB: {}", config.database_name);
+        // Initialiser MongoDB via le module dédié
+        let mongo_connection = MongoConnection::new().await?;
         
         Ok(AppState {
             app_name: "My Actix-web App".into(),
             counter: Mutex::new(0),
             sessions: Mutex::new(HashMap::new()),
-            db: database,
+            db: mongo_connection.database().clone(),
         })
     }
 

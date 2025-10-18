@@ -5,6 +5,7 @@ mod authentication;
 mod documents;
 mod model;
 mod config;
+mod db;
 
 use crate::model::AppState;
 use crate::config::Config;
