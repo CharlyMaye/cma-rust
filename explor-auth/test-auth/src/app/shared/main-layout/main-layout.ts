@@ -11,36 +11,37 @@ import { map, shareReplay } from 'rxjs/operators';
 import { RouterOutlet } from '@angular/router';
 import { Auth } from '../../security/auth';
 import { Theme } from '../theme';
+import { Breakpoint } from '../breakpoint';
 
 @Component({
   selector: 'app-main-layout',
-  imports: [RouterOutlet,     MatToolbarModule,
+  imports: [
+    RouterOutlet,
+    MatToolbarModule,
     MatButtonModule,
     MatSidenavModule,
     MatListModule,
     MatIconModule,
-    AsyncPipe,],
+    AsyncPipe,
+  ],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex-full-size' }
 })
 export class MainLayout {
-  private theme = inject(Theme);
-  private auth = inject(Auth);
-  private breakpointObserver = inject(BreakpointObserver);
+  private readonly _theme = inject(Theme);
+  private readonly _breakpoint = inject(Breakpoint);
+  private readonly _auth = inject(Auth);
 
-  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
-    .pipe(
-      map(result => result.matches),
-      shareReplay()
-    );
-  logout() {
+  public readonly isHandset$: Observable<boolean> = this._breakpoint.isHandset$;
+
+  public logout(): void {
     console.log('Logging out...');
-    this.auth.logout();
+    this._auth.logout();
   }
 
-  toggleColorScheme() {
-    this.theme.toggleColorScheme();
+  public toggleColorScheme(): void {
+    this._theme.toggleColorScheme();
   }
 }
