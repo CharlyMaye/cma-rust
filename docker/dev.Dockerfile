@@ -30,45 +30,71 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     pkg-config \
     ca-certificates \
-    
     # Core development libraries
-    libssl-dev \        # OpenSSL development headers for HTTPS/TLS
-    libclang-dev \      # Clang development headers for bindgen
-    clang \             # Clang compiler for native dependencies
-    cmake \             # CMake build system for C/C++ components
-    
+    # OpenSSL development headers for HTTPS/TLS
+    libssl-dev \
+    # Clang development headers for bindgen
+    libclang-dev \
+    # Clang compiler for native dependencies
+    clang \
+    # CMake build system for C/C++ components
+    cmake \
+
     # Wayland/X11 development support for waydash GUI
-    libwayland-dev \        # Wayland protocol development headers
-    libwayland-client0 \    # Wayland client runtime library
-    libwayland-cursor0 \    # Wayland cursor support
-    libwayland-egl1 \       # Wayland EGL integration
-    wayland-protocols \     # Standard Wayland protocol definitions
-    libxkbcommon-dev \      # Keyboard layout development headers
-    libxkbcommon0 \         # Keyboard layout runtime library
-    libx11-dev \            # X11 development headers (fallback support)
-    libxcursor-dev \        # X11 cursor management
-    libxrandr-dev \         # X11 display configuration
-    libxi-dev \             # X11 input extension
-    
+    # Wayland protocol development headers
+    libwayland-dev \
+    # Wayland client runtime library
+    libwayland-client0 \
+    # Wayland cursor support
+    libwayland-cursor0 \
+    # Wayland EGL integration
+    libwayland-egl1 \
+    # Standard Wayland protocol definitions
+    wayland-protocols \
+    # Keyboard layout development headers
+    libxkbcommon-dev \
+    # Keyboard layout runtime library
+    libxkbcommon0 \
+    # X11 development headers (fallback support)
+    libx11-dev \
+    # X11 cursor management
+    libxcursor-dev \
+    # X11 display configuration
+    libxrandr-dev \
+    # X11 input extension
+    libxi-dev \
+
     # OpenGL/EGL graphics development for waydash rendering
-    libgl1-mesa-dev \       # Mesa OpenGL development headers
-    libgl1 \                # Mesa OpenGL runtime library
-    libegl1-mesa-dev \      # EGL development headers for Wayland
-    libegl1 \               # EGL runtime library
+    # Mesa OpenGL development headers
+    libgl1-mesa-dev \
+    # Mesa OpenGL runtime library
+    libgl1 \
+    # EGL development headers for Wayland
+    libegl1-mesa-dev \
+    # EGL runtime library
+    libegl1 \
     
     # System integration libraries
-    libudev-dev \           # Device management development headers
-    libdbus-1-dev \         # D-Bus IPC development headers
+    # Device management development headers
+    libudev-dev \
+    # D-Bus IPC development headers
+    libdbus-1-dev \
     
     # Internationalization and locale support
-    locales \               # Locale data for proper text rendering
+    # Locale data for proper text rendering
+    locales \
     
     # Development and debugging tools
-    vim \                   # Text editor for container development
-    less \                  # Pager for log viewing
-    unzip \                 # Archive extraction utility
-    zip \                   # Archive creation utility
-    tzdata \                # Timezone data for accurate timestamps
+    # Text editor for container development
+    vim \
+    # Pager for log viewing
+    less \
+    # Archive extraction utility
+    unzip \
+    # Archive creation utility
+    zip \
+    # Timezone data for accurate timestamps
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure UTF-8 locale for proper text rendering and xkbcommon compatibility
@@ -82,6 +108,11 @@ ENV LANG=en_US.UTF-8 \
 # Uncomment for headless environments or systems without proper GPU drivers
 # ENV LIBGL_ALWAYS_SOFTWARE=1
 
+# Install Node.js (latest LTS version) using NodeSource repository
+# Provides Node.js and npm for JavaScript/TypeScript development
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs
+
 # Install Rust toolchain using official rustup installer
 # Provides latest stable Rust with package manager (cargo)
 RUN curl -sSf https://sh.rustup.rs | sh -s -- -y
@@ -94,8 +125,8 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 RUN rustup component add rustfmt clippy rust-src
 
 # Set development working directory
-# Mount workspace source code here: -v $(pwd):/work
-WORKDIR /work
+# Mount workspace source code here: -v $(pwd):/workspace
+WORKDIR /workspace
 
 # Default command: Interactive shell for development
 # Allows developers to run cargo commands, edit code, and test applications

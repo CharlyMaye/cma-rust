@@ -12,7 +12,7 @@ use crate::trace::Trace;
 /// # Examples
 ///
 /// ```
-/// use cma::trace::{TraceHandler, TraceLevel};
+/// use traces::trace::{TraceHandler, TraceLevel, Trace};
 ///
 /// struct CustomHandler;
 ///

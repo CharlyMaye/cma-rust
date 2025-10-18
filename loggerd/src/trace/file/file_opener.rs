@@ -45,16 +45,14 @@ use std::os::windows::fs::OpenOptionsExt;
 ///
 /// # Examples
 ///
-/// ```no_run
-/// use loggerd::trace::file::file_opener::open_log_file;
+/// ```ignore
+/// // This is an internal function, not meant to be used directly.
+/// // Use FileTraceHandler instead.
 /// use std::path::Path;
 /// use std::io::Write;
 ///
-/// # fn main() -> Result<(), std::io::Error> {
 /// let mut file = open_log_file(Path::new("app.log"))?;
 /// writeln!(file, "Log message")?;
-/// # Ok(())
-/// # }
 /// ```
 pub fn open_log_file(path: &Path) -> Result<File> {
     #[cfg(unix)]

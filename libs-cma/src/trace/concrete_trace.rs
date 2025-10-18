@@ -32,7 +32,7 @@ impl<'a> ConcreteTrace<'a> {
     /// # Examples
     ///
     /// ```
-    /// use cma::trace::ConcreteTrace;
+    /// use traces::trace::ConcreteTrace;
     ///
     /// let trace = ConcreteTrace::new();
     /// ```
@@ -41,6 +41,12 @@ impl<'a> ConcreteTrace<'a> {
         Self {
             handlers: Arc::new(Mutex::new(Vec::new())),
         }
+    }
+}
+
+impl<'a> Default for ConcreteTrace<'a> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

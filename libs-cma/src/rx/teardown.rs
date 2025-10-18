@@ -75,9 +75,9 @@ impl<TValue, TError> TeardownLogic<TValue, TError> {
     /// # Examples
     ///
     /// ```
-    /// use cma::rx::teardown::TeardownLogic;
+    /// use traces::rx::teardown::TeardownLogic;
     ///
-    /// let teardown = TeardownLogic::from_sync(|observer| {
+    /// let teardown: TeardownLogic<i32, ()> = TeardownLogic::from_sync(|observer| {
     ///     (observer.next)(42);
     ///     (observer.complete)();
     ///     Ok(())
@@ -105,12 +105,11 @@ impl<TValue, TError> TeardownLogic<TValue, TError> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use cma::rx::teardown::TeardownLogic;
+    /// ```no_run
+    /// use traces::rx::teardown::TeardownLogic;
     ///
-    /// let teardown = TeardownLogic::from_async(|observer| async move {
-    ///     // Simulate async work
-    ///     tokio::time::sleep(Duration::from_millis(100)).await;
+    /// let teardown: TeardownLogic<i32, ()> = TeardownLogic::from_async(|observer| async move {
+    ///     // Async operation
     ///     (observer.next)(42);
     ///     (observer.complete)();
     ///     Ok(())

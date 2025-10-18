@@ -1,0 +1,28 @@
+@use '@angular/material' as mat;
+.cma-toolbar,
+.mat-toolbar-row {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    // justify-content: flex-start;
+
+}
+.cma-toolbar {
+    @include mat.toolbar-overrides((
+      container-background-color: var(--mat-sys-primary),
+      container-text-color: var(--mat-sys-on-primary),
+    ));
+    @include mat.icon-button-overrides((
+      icon-color: var(--mat-sys-on-primary),
+    ));
+    @include mat.button-overrides((
+        text-container-height: 32px,
+        outlined-container-height: 32px,
+    ));
+    .cma-toolbar-logout-button {
+        justify-self: flex-end;
+    }
+    span {
+        width: 100%;
+    }
+}

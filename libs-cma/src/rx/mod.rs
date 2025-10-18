@@ -18,6 +18,13 @@ pub mod observer;
 pub mod operators;
 pub mod teardown;
 
+// Re-export commonly used types
+// Note: These are commented out to satisfy clippy unused imports warnings.
+// Uncomment when needed for external use.
+// pub use observable::{Observable, Subscribable};
+// pub use observer::Observer;
+// pub use teardown::TeardownLogic;
+
 /// Test function for the reactive programming system.
 ///
 /// This is a placeholder function used during development to test

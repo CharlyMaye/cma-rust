@@ -119,7 +119,61 @@ make docker-run-loggerd
 make docker-run-waydash
 ```
 
-## 📚 Documentation
+## �️ Development Services
+
+### MongoDB & Mongo Express
+
+The development environment includes MongoDB with a web interface:
+
+```bash
+# Start all services (MongoDB + Mongo Express + Qdrant)
+docker-compose -f docker/docker-compose.yml up -d
+
+# Access Mongo Express (Web UI for MongoDB)
+# URL: http://localhost:8081
+# Username: admin
+# Password: admin123
+```
+
+**MongoDB Connection:**
+- Host: `localhost:27017`
+- Database: `cma_dev`
+- Username: `root`
+- Password: `example`
+
+### Qdrant Vector Database
+
+Qdrant provides vector search capabilities with a built-in dashboard:
+
+```bash
+# Access Qdrant Dashboard
+# URL: http://localhost:6333/dashboard
+
+# Qdrant API endpoints
+# HTTP API: http://localhost:6333
+# gRPC API: localhost:6334
+```
+
+**Qdrant Usage:**
+```bash
+# Health check
+curl http://localhost:6333/health
+
+# List collections
+curl http://localhost:6333/collections
+```
+
+### Stop Services
+
+```bash
+# Stop all development services
+docker-compose -f docker/docker-compose.yml down
+
+# Stop and remove volumes (clean reset)
+docker-compose -f docker/docker-compose.yml down -v
+```
+
+## �📚 Documentation
 
 - **[CI/CD](docs/CI_CD.md)**: Complete CI/CD pipeline documentation
 - **[TODO](docs/todo.md)**: Project roadmap (10 weeks)

@@ -46,7 +46,7 @@ impl From<io::Error> for I18nError {
 /// # Examples
 ///
 /// ```
-/// use cma::i18n::{I18nState, create_i18n};
+/// use traces::i18n::{I18nState, create_i18n};
 ///
 /// let mut i18n = create_i18n("en");
 /// i18n.load_locale("fr").expect("Failed to load French locale");
@@ -141,7 +141,7 @@ impl I18nState {
 /// # Examples
 ///
 /// ```
-/// use cma::i18n::create_i18n;
+/// use traces::i18n::create_i18n;
 ///
 /// let i18n = create_i18n("en");
 /// ```

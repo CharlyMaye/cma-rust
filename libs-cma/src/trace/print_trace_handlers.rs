@@ -8,7 +8,7 @@ use crate::trace::{Trace, handlers::TraceHandler};
 /// # Examples
 ///
 /// ```
-/// use cma::trace::{PrintTraceHandler, TraceLevel, Trace};
+/// use traces::trace::{PrintTraceHandler, TraceLevel, Trace};
 ///
 /// let handler = PrintTraceHandler::new();
 /// handler.log(TraceLevel::Info, "Hello, world!");
@@ -24,6 +24,12 @@ impl PrintTraceHandler {
     /// A new PrintTraceHandler ready to output trace messages to the console
     pub fn new() -> Self {
         Self {}
+    }
+}
+
+impl Default for PrintTraceHandler {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
