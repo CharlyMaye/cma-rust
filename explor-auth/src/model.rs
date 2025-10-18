@@ -3,26 +3,32 @@ use std::collections::HashMap;
 use mongodb::Database;
 
 use crate::authentication::Session;
-use crate::documents::data_provider::DocumentDataProvider;
+use crate::documents::DocumentService;
 use crate::db::MongoConnection;
 
 pub struct AppState {
+    pub app_name: String,
+    pub counter: Mutex<i32>,
     pub sessions: Mutex<HashMap<String, Session>>,
     pub db: Database,
+    pub document_service: DocumentService,
 }
 
 impl AppState {
     pub async fn new() -> Result<Self, mongodb::error::Error> {
         // Initialiser MongoDB via le module dédié
         let mongo_connection = MongoConnection::new().await?;
+        let database = mongo_connection.database();
+        
+        // Initialiser le service documents
+        let document_service = DocumentService::new(database).await?;
         
         Ok(AppState {
+            app_name: "My Actix-web App".into(),
+            counter: Mutex::new(0),
             sessions: Mutex::new(HashMap::new()),
-            db: mongo_connection.database().clone(),
+            db: database.clone(),
+            document_service,
         })
-    }
-
-    pub fn get_document_provider(&self) -> DocumentDataProvider {
-        DocumentDataProvider::new(&self.db)
     }
 }

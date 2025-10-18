@@ -1,32 +1,20 @@
 use actix_web::{web, HttpResponse, Result};
-use serde_json::json;
 
 use crate::model::AppState;
-use super::model::{CreateDocumentRequest, UpdateDocumentRequest, DocumentResponse};
+use super::model::{CreateDocumentRequest, UpdateDocumentRequest};
+use super::response::{ApiResponse, ErrorResponse};
 
 pub async fn get_documents(data: web::Data<AppState>) -> Result<HttpResponse> {
-    let data_provider = data.get_document_provider();
-    
-    match data_provider.find_documents().await {
-        Ok(mongo_documents) => {
-            // Convertir DocumentMongo -> DocumentResponse (DTO)
-            let documents: Vec<DocumentResponse> = mongo_documents
-                .into_iter()
-                .map(|doc| doc.to_response())
-                .collect();
-            
-            Ok(HttpResponse::Ok().json(json!({
-                "status": "success",
-                "data": documents,
-                "count": documents.len()
-            })))
+    match data.document_service.get_all_documents().await {
+        Ok(documents) => {
+            let count = documents.len();
+            let response = ApiResponse::success_with_count(documents, count);
+            Ok(HttpResponse::Ok().json(response))
         },
         Err(err) => {
             eprintln!("Error fetching documents: {:?}", err);
-            Ok(HttpResponse::InternalServerError().json(json!({
-                "status": "error",
-                "message": "Failed to fetch documents"
-            })))
+            let error = ErrorResponse::new("Failed to fetch documents");
+            Ok(HttpResponse::InternalServerError().json(error))
         }
     }
 }
@@ -36,28 +24,20 @@ pub async fn get_document_by_id(
     data: web::Data<AppState>
 ) -> Result<HttpResponse> {
     let document_id = path.into_inner();
-    let data_provider = data.get_document_provider();
     
-    match data_provider.find_document_by_id(&document_id).await {
-        Ok(Some(mongo_doc)) => {
-            // Convertir DocumentMongo -> DocumentResponse (DTO)
-            let document = mongo_doc.to_response();
-            
-            Ok(HttpResponse::Ok().json(json!({
-                "status": "success",
-                "data": document
-            })))
+    match data.document_service.get_document_by_id(&document_id).await {
+        Ok(Some(document)) => {
+            let response = ApiResponse::success(document);
+            Ok(HttpResponse::Ok().json(response))
         },
-        Ok(None) => Ok(HttpResponse::NotFound().json(json!({
-            "status": "error",
-            "message": "Document not found"
-        }))),
+        Ok(None) => {
+            let error = ErrorResponse::new("Document not found");
+            Ok(HttpResponse::NotFound().json(error))
+        },
         Err(err) => {
             eprintln!("Error fetching document: {:?}", err);
-            Ok(HttpResponse::InternalServerError().json(json!({
-                "status": "error",
-                "message": "Failed to fetch document"
-            })))
+            let error = ErrorResponse::new("Failed to fetch document");
+            Ok(HttpResponse::InternalServerError().json(error))
         }
     }
 }
@@ -66,29 +46,24 @@ pub async fn create_document(
     body: web::Json<CreateDocumentRequest>,
     data: web::Data<AppState>
 ) -> Result<HttpResponse> {
-    let data_provider = data.get_document_provider();
+    let request = body.into_inner();
     
-    // Convertir CreateDocumentRequest -> DocumentMongo
-    let mongo_document = body.into_inner().into();
-    
-    match data_provider.insert_document(mongo_document).await {
-        Ok(inserted_id) => Ok(HttpResponse::Created().json(json!({
-            "status": "success",
-            "message": "Document created successfully",
-            "id": inserted_id
-        }))),
-        Err(super::data_provider::DataProviderError::DuplicateDocId(doc_id)) => {
-            Ok(HttpResponse::Conflict().json(json!({
-                "status": "error",
-                "message": format!("Document with doc_id '{}' already exists", doc_id)
-            })))
+    match data.document_service.create_document(request).await {
+        Ok(document) => {
+            let location = format!("/api/documents/{}", document.doc_id);
+            let response = ApiResponse::success(document);
+            Ok(HttpResponse::Created()
+                .insert_header(("Location", location))
+                .json(response))
+        },
+        Err(crate::documents::DataProviderError::DuplicateDocId(doc_id)) => {
+            let error = ErrorResponse::new(format!("Document with doc_id '{}' already exists", doc_id));
+            Ok(HttpResponse::Conflict().json(error))
         },
         Err(err) => {
             eprintln!("Error creating document: {:?}", err);
-            Ok(HttpResponse::InternalServerError().json(json!({
-                "status": "error",
-                "message": "Failed to create document"
-            })))
+            let error = ErrorResponse::new("Failed to create document");
+            Ok(HttpResponse::InternalServerError().json(error))
         }
     }
 }
@@ -99,24 +74,21 @@ pub async fn update_document(
     data: web::Data<AppState>
 ) -> Result<HttpResponse> {
     let doc_id = path.into_inner();
-    let data_provider = data.get_document_provider();
     let request = body.into_inner();
     
-    match data_provider.update_document(&doc_id, request.content).await {
-        Ok(true) => Ok(HttpResponse::Ok().json(json!({
-            "status": "success",
-            "message": "Document updated successfully"
-        }))),
-        Ok(false) => Ok(HttpResponse::NotFound().json(json!({
-            "status": "error",
-            "message": "Document not found"
-        }))),
+    match data.document_service.update_document(&doc_id, request).await {
+        Ok(Some(document)) => {
+            let response = ApiResponse::success(document);
+            Ok(HttpResponse::Ok().json(response))
+        },
+        Ok(None) => {
+            let error = ErrorResponse::new("Document not found");
+            Ok(HttpResponse::NotFound().json(error))
+        },
         Err(err) => {
             eprintln!("Error updating document: {:?}", err);
-            Ok(HttpResponse::InternalServerError().json(json!({
-                "status": "error",
-                "message": "Failed to update document"
-            })))
+            let error = ErrorResponse::new("Failed to update document");
+            Ok(HttpResponse::InternalServerError().json(error))
         }
     }
 }
@@ -126,23 +98,20 @@ pub async fn delete_document(
     data: web::Data<AppState>
 ) -> Result<HttpResponse> {
     let doc_id = path.into_inner();
-    let data_provider = data.get_document_provider();
     
-    match data_provider.delete_document(&doc_id).await {
-        Ok(true) => Ok(HttpResponse::Ok().json(json!({
-            "status": "success",
-            "message": "Document deleted successfully"
-        }))),
-        Ok(false) => Ok(HttpResponse::NotFound().json(json!({
-            "status": "error",
-            "message": "Document not found"
-        }))),
+    match data.document_service.delete_document(&doc_id).await {
+        Ok(true) => {
+            // REST standard: 204 No Content pour une suppression réussie
+            Ok(HttpResponse::NoContent().finish())
+        },
+        Ok(false) => {
+            let error = ErrorResponse::new("Document not found");
+            Ok(HttpResponse::NotFound().json(error))
+        },
         Err(err) => {
             eprintln!("Error deleting document: {:?}", err);
-            Ok(HttpResponse::InternalServerError().json(json!({
-                "status": "error",
-                "message": "Failed to delete document"
-            })))
+            let error = ErrorResponse::new("Failed to delete document");
+            Ok(HttpResponse::InternalServerError().json(error))
         }
     }
 }

@@ -43,39 +43,11 @@ impl MongoConnection {
     }
     
     async fn initialize_collections(&self) -> Result<(), mongodb::error::Error> {
+        // Initialiser la collection users (pour l'authentification)
         let collection_names = self.database.list_collection_names().await?;
-        
-        // Initialiser la collection documents
-        if !collection_names.contains(&"documents".to_string()) {
-            self.create_documents_collection().await?;
-        }
-        
-        // Initialiser la collection users
         if !collection_names.contains(&"users".to_string()) {
             self.create_users_collection().await?;
         }
-        
-        Ok(())
-    }
-    
-    async fn create_documents_collection(&self) -> Result<(), mongodb::error::Error> {
-        use mongodb::bson::doc;
-        use mongodb::options::IndexOptions;
-        use mongodb::IndexModel;
-        
-        println!("📝 Creating collection: documents");
-        self.database.create_collection("documents").await?;
-        
-        // Créer un index unique sur doc_id
-        let documents_collection = self.database.collection::<mongodb::bson::Document>("documents");
-        let index_options = IndexOptions::builder().unique(true).build();
-        let index_model = IndexModel::builder()
-            .keys(doc! { "doc_id": 1 })
-            .options(index_options)
-            .build();
-        
-        documents_collection.create_index(index_model).await?;
-        println!("📌 Index unique créé sur 'doc_id'");
         
         Ok(())
     }

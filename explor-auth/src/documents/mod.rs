@@ -1,6 +1,13 @@
 mod control;
 mod model;
-pub mod data_provider;
+mod data_provider;
+mod db;
+mod service;
+mod response;
+
+// Exporter uniquement le service et les types publics nécessaires
+pub use service::DocumentService;
+pub use data_provider::DataProviderError;
 
 pub fn configure_document_routes() -> actix_web::Scope {
     actix_web::web::scope("/api/documents")
