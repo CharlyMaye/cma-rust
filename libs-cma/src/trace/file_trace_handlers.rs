@@ -61,10 +61,10 @@ impl FileTraceHanlder {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use cma::trace::FileTraceHandler;
+    /// ```no_run
+    /// use traces::trace::FileTraceHanlder;
     ///
-    /// let handler = FileTraceHandler::new("app.log")
+    /// let handler = FileTraceHanlder::new("app.log")
     ///     .expect("Failed to create file handler");
     /// ```
     pub fn new(file_path: &str) -> Result<Self, std::io::Error> {
@@ -93,13 +93,16 @@ impl FileTraceHanlder {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use cma::trace::{FileTraceHandler, TraceLevel, Trace};
+    /// ```no_run
+    /// use traces::trace::{FileTraceHanlder, TraceLevel, Trace};
     ///
-    /// let handler = FileTraceHandler::new("app.log")?
+    /// # fn main() -> Result<(), std::io::Error> {
+    /// let handler = FileTraceHanlder::new("app.log")?
     ///     .start()?;
     ///
     /// handler.log(TraceLevel::Info, "Handler started");
+    /// # Ok(())
+    /// # }
     /// ```
     pub fn start(mut self) -> Result<Self, std::io::Error> {
         if self.sender.is_some() {

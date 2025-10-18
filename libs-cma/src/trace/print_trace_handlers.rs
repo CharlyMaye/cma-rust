@@ -8,7 +8,7 @@ use crate::trace::{Trace, handlers::TraceHandler};
 /// # Examples
 ///
 /// ```
-/// use cma::trace::{PrintTraceHandler, TraceLevel, Trace};
+/// use traces::trace::{PrintTraceHandler, TraceLevel, Trace};
 ///
 /// let handler = PrintTraceHandler::new();
 /// handler.log(TraceLevel::Info, "Hello, world!");

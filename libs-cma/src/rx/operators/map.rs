@@ -21,10 +21,10 @@ where
     /// It creates a new Observable without triggering the source.
     ///
     /// # Examples
-    /// ```
-    /// use cma::rx::Observable;
+    /// ```no_run
+    /// use traces::rx::{Observable, Subscribable};
     ///
-    /// let observable = Observable::new(|observer| {
+    /// let mut observable: Observable<i32, ()> = Observable::new(|observer| {
     ///     (observer.next)(1);
     ///     (observer.next)(2);
     ///     (observer.next)(3);

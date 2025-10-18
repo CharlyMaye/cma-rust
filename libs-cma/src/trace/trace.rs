@@ -16,7 +16,7 @@ pub trait Trace {
     /// # Examples
     ///
     /// ```
-    /// use cma::trace::{Trace, TraceLevel, create_trace};
+    /// use traces::trace::{Trace, TraceLevel, create_trace};
     ///
     /// let trace = create_trace().unwrap();
     /// trace.log(TraceLevel::Info, "Application started");
@@ -44,7 +44,7 @@ pub trait HandlerRegister<'a> {
     /// # Examples
     ///
     /// ```
-    /// use cma::trace::{ConcreteTrace, HandlerRegister, PrintTraceHandler};
+    /// use traces::trace::{ConcreteTrace, HandlerRegister, PrintTraceHandler};
     ///
     /// let trace = ConcreteTrace::new();
     /// let handler = PrintTraceHandler::new();

@@ -137,10 +137,10 @@ impl Drop for Unsubscribable {
 ///
 /// # Examples
 ///
-/// ```
-/// use cma::rx::Observable;
+/// ```no_run
+/// use traces::rx::{Observable, Subscribable};
 ///
-/// let observable = Observable::new(|observer| {
+/// let mut observable: Observable<i32, ()> = Observable::new(|observer| {
 ///     (observer.next)(42);
 ///     (observer.complete)();
 ///     Ok(())
@@ -177,9 +177,9 @@ impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     /// # Examples
     ///
     /// ```
-    /// use cma::rx::Observable;
+    /// use traces::rx::Observable;
     ///
-    /// let observable = Observable::new(|observer| {
+    /// let observable: Observable<i32, ()> = Observable::new(|observer| {
     ///     (observer.next)(1);
     ///     (observer.next)(2);
     ///     (observer.next)(3);
@@ -211,12 +211,11 @@ impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use cma::rx::Observable;
+    /// ```no_run
+    /// use traces::rx::Observable;
     ///
-    /// let observable = Observable::with_async_teardown(|observer| async move {
-    ///     // Simulate async work
-    ///     tokio::time::sleep(Duration::from_millis(100)).await;
+    /// let observable: Observable<i32, ()> = Observable::with_async_teardown(|observer| async move {
+    ///     // Async operation
     ///     (observer.next)(42);
     ///     (observer.complete)();
     ///     Ok(())

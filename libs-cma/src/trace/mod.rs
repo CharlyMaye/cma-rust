@@ -8,11 +8,12 @@ mod trace;
 
 use std::io::Error;
 
-use concrete_trace::ConcreteTrace;
-use file_trace_handlers::FileTraceHanlder;
-use print_trace_handlers::PrintTraceHandler;
-use trace::HandlerRegister;
+pub use concrete_trace::ConcreteTrace;
+pub use file_trace_handlers::FileTraceHanlder;
+pub use print_trace_handlers::PrintTraceHandler;
+pub use trace::HandlerRegister;
 
+pub use handlers::TraceHandler;
 pub use level::TraceLevel;
 pub use trace::Trace;
 
@@ -29,8 +30,8 @@ pub use trace::Trace;
 ///
 /// # Examples
 ///
-/// ```
-/// use cma::trace::{create_trace, TraceLevel};
+/// ```no_run
+/// use traces::trace::{create_trace, TraceLevel, Trace};
 ///
 /// let trace = create_trace().expect("Failed to create trace");
 /// trace.log(TraceLevel::Info, "Application started");

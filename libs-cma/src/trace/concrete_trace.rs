@@ -32,7 +32,7 @@ impl<'a> ConcreteTrace<'a> {
     /// # Examples
     ///
     /// ```
-    /// use cma::trace::ConcreteTrace;
+    /// use traces::trace::ConcreteTrace;
     ///
     /// let trace = ConcreteTrace::new();
     /// ```
