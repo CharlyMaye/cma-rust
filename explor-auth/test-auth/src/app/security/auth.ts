@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, Signal, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { BehaviorSubject, delay, delayWhen, Observable } from 'rxjs';
+import { BehaviorSubject, catchError, concatMap, delay, delayWhen, map, Observable, of, switchMap, take, tap } from 'rxjs';
 
 
 export abstract class Auth {
@@ -10,14 +10,14 @@ export abstract class Auth {
   abstract readonly isAuthenticated: Signal<boolean>;
   abstract login(returnUrl: string): void;
   abstract logout(): void;
-  abstract checkSession(): void;
+  abstract checkSession(): Observable<boolean>;
 }
 
 @Injectable()
 export class ConcreteAuth extends Auth {
   readonly #http = inject(HttpClient);
   readonly #router = inject(Router);
-  readonly #uri = "http://127.0.0.1:8080/api/auth";
+  readonly #uri = "http://localhost:8080/api/auth";
 
   // Options HTTP avec credentials pour les cookies
   readonly #httpOptions = {
@@ -35,7 +35,7 @@ export class ConcreteAuth extends Auth {
     return btoa(password);
   }
 
-  login(returnUrl: string) {
+  public login(returnUrl: string) {
     const credentials = {
       user: "test",
       password: this.encodePassword("test")
@@ -56,7 +56,7 @@ export class ConcreteAuth extends Auth {
       });
   }
 
-  logout() {
+  public logout() {
     this.#isAuthenticated.next(false);
     this.#http.post(`${this.#uri}/logout`, {}, this.#httpOptions).subscribe(
       {
@@ -71,15 +71,39 @@ export class ConcreteAuth extends Auth {
   }
 
   // Vérifier si l'utilisateur est déjà connecté (via cookie)
-  checkSession() {
-    this.#http.get(`${this.#uri}/verify`, this.#httpOptions).subscribe(
-      {
-        next: () => {
-          this.#isAuthenticated.next(true);
-        },
-        error: () => {
-          this.#isAuthenticated.next(false);
+  public checkSession(): Observable<boolean> {
+    return this.#isAuthenticated.pipe(
+      concatMap(
+        (isAuthenticated) => {
+          if (isAuthenticated) {
+            console.log('Current isAuthenticated state:', isAuthenticated);
+            return of(true);
+          } else {
+            console.log('Checking session with server...');
+            return this.#http.get(`${this.#uri}/verify`, this.#httpOptions).pipe(
+              map(() => {
+                console.log('Valid session found.');
+                return true;
+              }),
+              catchError(() => {
+                console.log('No valid session found.');
+                return of(false);
+              })
+            )
+          }
         }
-      });
+      ),
+      tap(
+        {
+          next: (isAuthenticated) => {
+            this.#isAuthenticated.next(isAuthenticated);
+          },
+          error: () => {
+            this.#isAuthenticated.next(false);
+          }
+        },
+      ),
+    take(1)
+    )
   }
 }

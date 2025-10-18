@@ -1,14 +1,15 @@
 import { inject } from '@angular/core';
 import { CanMatchFn, Router, UrlTree } from '@angular/router';
 import { Auth } from './auth';
-import { take, map, Observable } from 'rxjs';
+import { take, map, Observable, delay } from 'rxjs';
 
 export const authGuard: CanMatchFn = (route, segments): Observable<boolean | UrlTree>  => {
   const auth = inject(Auth);
   const router = inject(Router);
+  console.log('Auth Guard - checking authentication...');
   // TODO - add "loginprogress" state to avoid multiple redirects or use signals instead
-  return auth.isAuthenticated$.pipe(
-    take(1),
+  return auth.checkSession().pipe(
+    delay(1),
     map(isAuth => {
       console.log('Auth Guard - isAuthenticated:', isAuth);
       if (!isAuth) {
@@ -17,6 +18,7 @@ export const authGuard: CanMatchFn = (route, segments): Observable<boolean | Url
       }
       console.log('User authenticated, allowing access');
       return true;
-    })
+    }),
+    take(1),
   );
 };
