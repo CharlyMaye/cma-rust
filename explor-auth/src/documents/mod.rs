@@ -1,14 +1,18 @@
-mod control;
-mod model;
+pub mod control;
+pub mod model;
+pub mod response;
 mod data_provider;
 mod db;
 mod service;
-mod response;
 
 // Exporter uniquement le service et les types publics nécessaires
 pub use service::DocumentService;
 pub use data_provider::DataProviderError;
 
+/// Configure les routes de l'API Documents
+/// 
+/// Note: Pour appliquer le middleware d'authentification, utilisez .wrap(AuthMiddleware)
+/// au niveau de l'App ou du scope parent dans main.rs
 pub fn configure_document_routes() -> actix_web::Scope {
     actix_web::web::scope("/api/documents")
         .route("", actix_web::web::get().to(control::get_documents))

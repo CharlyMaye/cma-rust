@@ -1,19 +1,37 @@
 use serde::Serialize;
+use utoipa::ToSchema;
 
 /// Structure de réponse API standardisée
-#[derive(Debug, Serialize)]
+/// 
+/// Toutes les réponses de succès suivent ce format avec des données
+/// et des métadonnées séparées.
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ApiResponse<T> {
+    /// Les données de la réponse
     pub data: T,
+    
+    /// Métadonnées sur la réponse (status, count, etc.)
     pub metadata: ResponseMetadata,
 }
 
 /// Métadonnées de la réponse
-#[derive(Debug, Serialize)]
+/// 
+/// Contient des informations sur le statut de la requête et optionnellement
+/// un message ou un compteur d'éléments.
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ResponseMetadata {
+    /// Statut de la réponse ("success" ou "error")
+    #[schema(example = "success")]
     pub status: String,
+    
+    /// Message optionnel (principalement pour les erreurs)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(example = "Operation completed successfully")]
     pub message: Option<String>,
+    
+    /// Nombre d'éléments retournés (pour les listes)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(example = 42)]
     pub count: Option<usize>,
 }
 
@@ -60,8 +78,11 @@ impl<T> ApiResponse<T> {
 }
 
 /// Structure pour les réponses d'erreur (quand il n'y a pas de data)
-#[derive(Debug, Serialize)]
+/// 
+/// Utilisée pour retourner uniquement un message d'erreur sans données.
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ErrorResponse {
+    /// Métadonnées contenant le statut "error" et le message
     pub metadata: ResponseMetadata,
 }
 

@@ -13,25 +13,48 @@ pub struct DocumentMongo {
 
 // ============ DTOs (Data Transfer Objects) ============
 
-// DTO Response - Ce qui est retourné par l'API
-#[derive(Debug, Serialize, Deserialize, Clone)]
+use utoipa::ToSchema;
+
+/// Représentation d'un document retourné par l'API
+/// 
+/// Contient l'identifiant MongoDB interne et l'identifiant métier unique.
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct DocumentResponse {
-    pub id: String,          // _id MongoDB en hex
-    pub doc_id: String,      // Identifiant métier unique
-    pub content: String,
-}
-
-// DTO Request - Pour créer un document
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CreateDocumentRequest {
+    /// Identifiant MongoDB (ObjectId en hexadécimal)
+    #[schema(example = "507f1f77bcf86cd799439011")]
+    pub id: String,
+    
+    /// Identifiant métier unique du document
+    #[schema(example = "DOC-2025-001")]
     pub doc_id: String,
+    
+    /// Contenu du document au format JSON stringifié
+    #[schema(example = r#"{"title": "Mon document", "description": "Contenu exemple"}"#)]
     pub content: String,
 }
 
-// DTO Request - Pour mettre à jour un document
-#[derive(Debug, Deserialize, Serialize)]
+/// Requête pour créer un nouveau document
+/// 
+/// Le doc_id doit être unique dans la collection.
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
+pub struct CreateDocumentRequest {
+    /// Identifiant métier unique du document
+    #[schema(example = "DOC-2025-001")]
+    pub doc_id: String,
+    
+    /// Contenu du document au format JSON stringifié
+    #[schema(example = r#"{"title": "Mon document"}"#)]
+    pub content: String,
+}
+
+/// Requête pour mettre à jour un document existant
+/// 
+/// Seul le contenu peut être modifié, le doc_id est immuable.
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct UpdateDocumentRequest {
-    pub content: String,     // On ne peut pas changer le doc_id (c'est l'identifiant unique)
+    /// Nouveau contenu du document
+    #[schema(example = r#"{"title": "Document mis à jour"}"#)]
+    pub content: String,
 }
 
 // ============ Implementations ============

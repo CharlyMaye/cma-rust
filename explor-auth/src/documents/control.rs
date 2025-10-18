@@ -1,9 +1,23 @@
 use actix_web::{web, HttpResponse, Result};
+use utoipa;
 
 use crate::model::AppState;
-use super::model::{CreateDocumentRequest, UpdateDocumentRequest};
+use super::model::{CreateDocumentRequest, UpdateDocumentRequest, DocumentResponse};
 use super::response::{ApiResponse, ErrorResponse};
 
+/// Récupère tous les documents
+/// 
+/// Retourne la liste complète des documents stockés dans la base de données.
+/// La réponse inclut le nombre total de documents dans les métadonnées.
+#[utoipa::path(
+    get,
+    path = "/api/documents",
+    tag = "Documents",
+    responses(
+        (status = 200, description = "Liste des documents récupérée avec succès", body = inline(ApiResponse<Vec<DocumentResponse>>)),
+        (status = 500, description = "Erreur serveur interne", body = ErrorResponse)
+    )
+)]
 pub async fn get_documents(data: web::Data<AppState>) -> Result<HttpResponse> {
     match data.document_service.get_all_documents().await {
         Ok(documents) => {
@@ -19,6 +33,22 @@ pub async fn get_documents(data: web::Data<AppState>) -> Result<HttpResponse> {
     }
 }
 
+/// Récupère un document par son identifiant
+/// 
+/// Recherche et retourne un document spécifique en utilisant son doc_id.
+#[utoipa::path(
+    get,
+    path = "/api/documents/{id}",
+    tag = "Documents",
+    params(
+        ("id" = String, Path, description = "Identifiant unique du document (doc_id)")
+    ),
+    responses(
+        (status = 200, description = "Document trouvé", body = inline(ApiResponse<DocumentResponse>)),
+        (status = 404, description = "Document non trouvé", body = ErrorResponse),
+        (status = 500, description = "Erreur serveur interne", body = ErrorResponse)
+    )
+)]
 pub async fn get_document_by_id(
     path: web::Path<String>,
     data: web::Data<AppState>
@@ -42,6 +72,25 @@ pub async fn get_document_by_id(
     }
 }
 
+/// Crée un nouveau document
+/// 
+/// Insère un nouveau document dans la base de données. Le doc_id doit être unique.
+/// En cas de succès, retourne le document créé avec un header Location.
+#[utoipa::path(
+    post,
+    path = "/api/documents",
+    tag = "Documents",
+    request_body = CreateDocumentRequest,
+    responses(
+        (status = 201, description = "Document créé avec succès", body = inline(ApiResponse<DocumentResponse>),
+            headers(
+                ("Location" = String, description = "URI du document créé")
+            )
+        ),
+        (status = 409, description = "Un document avec ce doc_id existe déjà", body = ErrorResponse),
+        (status = 500, description = "Erreur serveur interne", body = ErrorResponse)
+    )
+)]
 pub async fn create_document(
     body: web::Json<CreateDocumentRequest>,
     data: web::Data<AppState>
@@ -68,6 +117,24 @@ pub async fn create_document(
     }
 }
 
+/// Met à jour un document existant
+/// 
+/// Modifie le contenu d'un document identifié par son doc_id.
+/// Le doc_id lui-même ne peut pas être modifié.
+#[utoipa::path(
+    put,
+    path = "/api/documents/{id}",
+    tag = "Documents",
+    params(
+        ("id" = String, Path, description = "Identifiant unique du document (doc_id)")
+    ),
+    request_body = UpdateDocumentRequest,
+    responses(
+        (status = 200, description = "Document mis à jour avec succès", body = inline(ApiResponse<DocumentResponse>)),
+        (status = 404, description = "Document non trouvé", body = ErrorResponse),
+        (status = 500, description = "Erreur serveur interne", body = ErrorResponse)
+    )
+)]
 pub async fn update_document(
     path: web::Path<String>,
     body: web::Json<UpdateDocumentRequest>,
@@ -93,6 +160,23 @@ pub async fn update_document(
     }
 }
 
+/// Supprime un document
+/// 
+/// Supprime définitivement un document identifié par son doc_id.
+/// Retourne 204 No Content en cas de succès (pas de corps de réponse).
+#[utoipa::path(
+    delete,
+    path = "/api/documents/{id}",
+    tag = "Documents",
+    params(
+        ("id" = String, Path, description = "Identifiant unique du document (doc_id)")
+    ),
+    responses(
+        (status = 204, description = "Document supprimé avec succès"),
+        (status = 404, description = "Document non trouvé", body = ErrorResponse),
+        (status = 500, description = "Erreur serveur interne", body = ErrorResponse)
+    )
+)]
 pub async fn delete_document(
     path: web::Path<String>,
     data: web::Data<AppState>
