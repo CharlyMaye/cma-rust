@@ -138,7 +138,7 @@ impl Drop for Unsubscribable {
 /// # Examples
 ///
 /// ```no_run
-/// use traces::rx::{Observable, Subscribable};
+/// use traces::rx::observable::{Observable, Subscribable};
 ///
 /// let mut observable: Observable<i32, ()> = Observable::new(|observer| {
 ///     (observer.next)(42);
@@ -177,7 +177,7 @@ impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     /// # Examples
     ///
     /// ```
-    /// use traces::rx::Observable;
+    /// use traces::rx::observable::Observable;
     ///
     /// let observable: Observable<i32, ()> = Observable::new(|observer| {
     ///     (observer.next)(1);
@@ -212,7 +212,7 @@ impl<TValue: 'static, TError: 'static> Observable<TValue, TError> {
     /// # Examples
     ///
     /// ```no_run
-    /// use traces::rx::Observable;
+    /// use traces::rx::observable::Observable;
     ///
     /// let observable: Observable<i32, ()> = Observable::with_async_teardown(|observer| async move {
     ///     // Async operation

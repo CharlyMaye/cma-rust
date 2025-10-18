@@ -44,6 +44,12 @@ impl<'a> ConcreteTrace<'a> {
     }
 }
 
+impl<'a> Default for ConcreteTrace<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> HandlerRegister<'a> for ConcreteTrace<'a> {
     #[allow(clippy::arc_with_non_send_sync)]
     fn register<T: TraceHandler + 'a>(&self, handler: T) {

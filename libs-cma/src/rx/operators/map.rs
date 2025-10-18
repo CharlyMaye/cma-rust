@@ -22,7 +22,7 @@ where
     ///
     /// # Examples
     /// ```no_run
-    /// use traces::rx::{Observable, Subscribable};
+    /// use traces::rx::observable::{Observable, Subscribable};
     ///
     /// let mut observable: Observable<i32, ()> = Observable::new(|observer| {
     ///     (observer.next)(1);

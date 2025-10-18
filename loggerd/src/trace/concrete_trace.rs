@@ -45,6 +45,12 @@ impl ConcreteTrace {
     }
 }
 
+impl Default for ConcreteTrace {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HandlerRegister for ConcreteTrace {
     fn register<T: TraceHandler + 'static>(&self, handler: T) {
         let mut handlers = self.handlers.lock().unwrap();

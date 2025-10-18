@@ -33,6 +33,12 @@ impl PrintTraceHandler {
     }
 }
 
+impl Default for PrintTraceHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Trace for PrintTraceHandler {
     fn log(&self, level: super::TraceLevel, message: &str) {
         let message = format!("{} - {}", level, message);

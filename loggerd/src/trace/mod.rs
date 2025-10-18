@@ -14,7 +14,9 @@ pub use concrete_trace::ConcreteTrace;
 pub use print_trace_handlers::PrintTraceHandler;
 pub use trace::HandlerRegister;
 
-pub use handlers::TraceHandler;
+// Note: Commented out to satisfy clippy unused imports warnings.
+// Uncomment when needed for external use.
+// pub use handlers::TraceHandler;
 pub use level::TraceLevel;
 pub use trace::Trace;
 
