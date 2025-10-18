@@ -1,31 +1,35 @@
-use std::sync::Mutex;
-use std::collections::HashMap;
-
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
-
 
 mod authentication;
 mod documents;
 mod model;
-
-use authentication::configure_auth_routes;
+mod config;
 
 use crate::model::AppState;
+use crate::config::Config;
 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    println!("Starting Actix-web server on http://localhost:8080");
-    let app_state = web::Data::new(AppState {
-        app_name: "My Actix-web App".into(),
-        counter: Mutex::new(0),
-        sessions: Mutex::new(HashMap::new()),
-    });
+    let config = Config::from_env();
+    
+    println!("Starting Actix-web server on http://{}:{}", config.server.host, config.server.port);
+    
+    // Initialiser l'AppState avec MongoDB
+    let app_state = web::Data::new(
+        AppState::new()
+            .await
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
+    );
+
+    let server_host = config.server.host.clone();
+    let server_port = config.server.port;
+    let cors_origin = config.cors.allowed_origin.clone();
 
     HttpServer::new(move || {
         let cors = Cors::default()
-            .allowed_origin("http://localhost:4200")
+            .allowed_origin(&cors_origin)
             .allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![
                 actix_web::http::header::AUTHORIZATION,
@@ -38,9 +42,10 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(cors)
             .app_data(app_state.clone())
-            .service(configure_auth_routes())
+            .service(authentication::configure_auth_routes())
+            .service(documents::configure_document_routes())
     })
-    .bind(("localhost", 8080))?
+    .bind((server_host.as_str(), server_port))?
     .run()
     .await
 }
