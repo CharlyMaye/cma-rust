@@ -37,6 +37,11 @@ body {
   // Reset the user agent margin.
   margin: 0;
 }
+
+// Classe pour forcer le thème sombre
+html.dark-theme {
+  color-scheme: dark;
+}
 /* You can add global styles to this file, and also import other style files */
 
 html, body { height: 100%; }

@@ -10,6 +10,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { RouterOutlet } from '@angular/router';
 import { Auth } from '../../security/auth';
+import { Theme } from '../theme';
 
 @Component({
   selector: 'app-main-layout',
@@ -25,6 +26,7 @@ import { Auth } from '../../security/auth';
   host: { class: 'flex-full-size' }
 })
 export class MainLayout {
+  private theme = inject(Theme);
   private auth = inject(Auth);
   private breakpointObserver = inject(BreakpointObserver);
 
@@ -36,5 +38,9 @@ export class MainLayout {
   logout() {
     console.log('Logging out...');
     this.auth.logout();
+  }
+
+  toggleColorScheme() {
+    this.theme.toggleColorScheme();
   }
 }
