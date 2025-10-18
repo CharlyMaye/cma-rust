@@ -55,13 +55,11 @@ where
         if let Some(cookie) = session_cookie {
             let session_id = cookie.value().to_string();
             
-            // Récupérer l'AppState pour vérifier la session
+            // Récupérer l'AppState pour vérifier la session via le service
             if let Some(app_state) = req.app_data::<actix_web::web::Data<AppState>>() {
-                let sessions = app_state.sessions.lock().unwrap();
-                
-                if sessions.contains_key(&session_id) {
+                // Utiliser le service d'authentification pour vérifier la session
+                if app_state.auth_service.verify_session(&session_id).is_ok() {
                     // Session valide, continuer la requête
-                    drop(sessions); // Libérer le lock
                     let fut = self.service.call(req);
                     return Box::pin(async move {
                         let res = fut.await?;

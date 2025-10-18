@@ -5,7 +5,9 @@ use crate::{authentication::{control::{log_in, log_out, verify_session}}};
 mod utils;
 pub mod model;
 pub mod control;
-pub use model::Session;
+pub mod service;
+
+pub use service::AuthService;
 
 /// Configure et retourne le scope d'authentification avec toutes les routes
 pub fn configure_auth_routes() -> actix_web::Scope {

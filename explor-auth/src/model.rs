@@ -1,15 +1,14 @@
 use std::sync::Mutex;
-use std::collections::HashMap;
 use mongodb::Database;
 
-use crate::authentication::Session;
+use crate::authentication::AuthService;
 use crate::documents::DocumentService;
 use crate::db::MongoConnection;
 
 pub struct AppState {
     pub app_name: String,
     pub counter: Mutex<i32>,
-    pub sessions: Mutex<HashMap<String, Session>>,
+    pub auth_service: AuthService,
     pub db: Database,
     pub document_service: DocumentService,
 }
@@ -23,10 +22,13 @@ impl AppState {
         // Initialiser le service documents
         let document_service = DocumentService::new(database).await?;
         
+        // Initialiser le service d'authentification
+        let auth_service = AuthService::new();
+        
         Ok(AppState {
             app_name: "My Actix-web App".into(),
             counter: Mutex::new(0),
-            sessions: Mutex::new(HashMap::new()),
+            auth_service,
             db: database.clone(),
             document_service,
         })

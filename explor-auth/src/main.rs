@@ -14,7 +14,7 @@ mod common;
 use crate::model::AppState;
 use crate::config::Config;
 use crate::documents::model::{DocumentResponse, CreateDocumentRequest, UpdateDocumentRequest};
-use crate::authentication::model::{LoginCredentials, SessionData};
+use crate::authentication::model::{LoginRequest, SessionResponse, LogoutResponse};
 use crate::common::{ApiResponse, ErrorResponse, ResponseMetadata};
 
 /// Spécification OpenAPI pour l'API complète
@@ -35,14 +35,16 @@ use crate::common::{ApiResponse, ErrorResponse, ResponseMetadata};
     components(
         schemas(
             // Modèles d'authentification
-            LoginCredentials,
-            SessionData,
+            LoginRequest,
+            SessionResponse,
+            LogoutResponse,
             // Modèles de documents
             DocumentResponse,
             CreateDocumentRequest,
             UpdateDocumentRequest,
             // Réponses API
-            ApiResponse<SessionData>,
+            ApiResponse<SessionResponse>,
+            ApiResponse<LogoutResponse>,
             ApiResponse<DocumentResponse>,
             ApiResponse<Vec<DocumentResponse>>,
             ErrorResponse,

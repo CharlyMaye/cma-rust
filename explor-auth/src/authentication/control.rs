@@ -1,11 +1,11 @@
 use actix_web::{web, HttpResponse, Responder, HttpRequest, cookie::Cookie};
-use uuid::Uuid;
-use chrono::Utc;
-use serde::Serialize;
-use utoipa::{self, ToSchema};
+use utoipa;
 
 use crate::{
-    authentication::{model::{LoginCredentials, SessionData}, utils, Session}, 
+    authentication::{
+        model::{LoginRequest, SessionResponse, LogoutResponse},
+        service::AuthError,
+    }, 
     model::AppState,
     common::{ApiResponse, ErrorResponse},
 };
@@ -20,10 +20,10 @@ use crate::{
     post,
     path = "/api/auth/login",
     tag = "Authentication",
-    request_body = LoginCredentials,
+    request_body = LoginRequest,
     responses(
         (status = 200, description = "Authentification réussie - Cookie session_id défini", 
-            body = inline(ApiResponse<SessionData>),
+            body = inline(ApiResponse<SessionResponse>),
             headers(
                 ("Set-Cookie" = String, description = "Cookie de session (session_id)")
             )
@@ -32,58 +32,50 @@ use crate::{
     )
 )]
 pub async fn log_in(
-    credentials: web::Json<LoginCredentials>,
+    request: web::Json<LoginRequest>,
     data: web::Data<AppState>,
 ) -> impl Responder {
     println!("🚀 POST /api/auth/login - Tentative de connexion");
     
-    // 1- récupérer le body contenant les credentials
-    let creds = credentials.into_inner();
-    println!("   👤 User: {}", creds.user);
+    let login_request = request.into_inner();
+    let username = login_request.user.clone();
+    println!("   👤 User: {}", username);
     
-    // 2- valider les credentials
-    if !utils::validate_credentials(&creds.user, &creds.password) {
-        println!("   ❌ Échec d'authentification pour {}", creds.user);
-        let error = ErrorResponse::new("Invalid credentials");
-        return HttpResponse::Unauthorized().json(error);
+    // Appeler le service d'authentification
+    match data.auth_service.login(login_request) {
+        Ok((session_id, session_response)) => {
+            println!("   ✅ Authentification réussie pour {}", username);
+            println!("   💾 Session créée: {}", session_id);
+            
+            // Créer le cookie de session
+            let cookie = Cookie::build("session_id", session_id.clone())
+                .http_only(false) // Temporairement false pour debug - mettre true en production
+                .secure(false) // IMPORTANT: false pour HTTP, true seulement pour HTTPS
+                .same_site(actix_web::cookie::SameSite::Lax)
+                .domain("localhost")
+                .path("/")
+                .max_age(actix_web::cookie::time::Duration::hours(24))
+                .finish();
+            
+            println!("   🍪 Cookie créé: session_id={} (Max-Age: 24h, SameSite: Lax, Secure: false)", session_id);
+            
+            let response = ApiResponse::success_with_message(session_response, "Login successful");
+            
+            HttpResponse::Ok()
+                .cookie(cookie)
+                .json(response)
+        }
+        Err(AuthError::InvalidCredentials) => {
+            println!("   ❌ Échec d'authentification pour {}", username);
+            let error = ErrorResponse::new("Invalid credentials");
+            HttpResponse::Unauthorized().json(error)
+        }
+        Err(_) => {
+            println!("   ⚠️  Erreur serveur lors de l'authentification");
+            let error = ErrorResponse::new("Internal server error");
+            HttpResponse::InternalServerError().json(error)
+        }
     }
-    
-    println!("   ✅ Authentification réussie pour {}", creds.user);
-    
-    // 3- créer une session
-    let session_id = Uuid::new_v4().to_string();
-    let now = Utc::now();
-    let session = Session {
-        user_id: creds.user.clone(),
-        created_at: now,
-        expires_at: now + chrono::Duration::hours(24), // Session expire dans 24h
-    };
-    
-    let session_data = session.to_data();
-    
-    // Stocker la session
-    if let Ok(mut sessions) = data.sessions.lock() {
-        sessions.insert(session_id.clone(), session);
-        println!("   💾 Session créée: {}", session_id);
-    }
-    
-    // 4- retourner une réponse avec un cookie HTTP-only
-    let cookie = Cookie::build("session_id", session_id.clone())
-        .http_only(false) // Temporairement false pour debug - mettre true en production
-        .secure(false) // IMPORTANT: false pour HTTP, true seulement pour HTTPS
-        .same_site(actix_web::cookie::SameSite::Lax) // Lax pour cross-site mais même domain
-        .domain("localhost") // Spécifier explicitement le domain
-        .path("/")
-        .max_age(actix_web::cookie::time::Duration::hours(24))
-        .finish();
-    
-    println!("   🍪 Cookie créé: session_id={} (Max-Age: 24h, SameSite: Lax, Secure: false)", session_id);
-    
-    let response = ApiResponse::success_with_message(session_data, "Login successful");
-    
-    HttpResponse::Ok()
-        .cookie(cookie)
-        .json(response)
 }
 
 /// Vérifie si une session est valide
@@ -94,7 +86,7 @@ pub async fn log_in(
     path = "/api/auth/verify",
     tag = "Authentication",
     responses(
-        (status = 200, description = "Session valide", body = inline(ApiResponse<SessionData>)),
+        (status = 200, description = "Session valide", body = inline(ApiResponse<SessionResponse>)),
         (status = 401, description = "Session invalide ou expirée", body = ErrorResponse)
     ),
     security(
@@ -122,91 +114,96 @@ pub async fn verify_session(
     };
 
     
-    // Vérifier si la session existe et est valide
-    if let Ok(sessions) = data.sessions.lock() {
-        if let Some(session) = sessions.get(&session_id) {
-            if session.expires_at > Utc::now() {
-                println!("   ✅ Session valide pour: {}", session.user_id);
-                let session_data = session.to_data();
-                let response = ApiResponse::success(session_data);
-                return HttpResponse::Ok().json(response);
-            } else {
-                println!("   ⏰ Session expirée pour: {}", session.user_id);
-            }
-        } else {
+    // Vérifier la session via le service
+    match data.auth_service.verify_session(&session_id) {
+        Ok(session_response) => {
+            println!("   ✅ Session valide pour: {}", session_response.user_id);
+            let response = ApiResponse::success(session_response);
+            HttpResponse::Ok().json(response)
+        }
+        Err(AuthError::SessionNotFound) => {
             println!("   ❌ Session introuvable: {}", session_id);
+            let error = ErrorResponse::new("Invalid or expired session");
+            HttpResponse::Unauthorized().json(error)
+        }
+        Err(AuthError::SessionExpired) => {
+            println!("   ⏰ Session expirée");
+            let error = ErrorResponse::new("Invalid or expired session");
+            HttpResponse::Unauthorized().json(error)
+        }
+        Err(_) => {
+            println!("   ⚠️  Erreur serveur lors de la vérification");
+            let error = ErrorResponse::new("Internal server error");
+            HttpResponse::InternalServerError().json(error)
         }
     }
-    
-    let error = ErrorResponse::new("Invalid or expired session");
-    HttpResponse::Unauthorized().json(error)
 }
 
 /// Déconnexion de l'utilisateur
 /// 
-/// Invalide la session côté serveur et supprime le cookie.
-#[derive(Serialize, ToSchema)]
-struct LogoutData {
-    /// Indique si une session a été trouvée
-    #[schema(example = true)]
-    session_found: bool,
-}
-
+/// Supprime la session et invalide le cookie.
 #[utoipa::path(
     post,
     path = "/api/auth/logout",
     tag = "Authentication",
     responses(
-        (status = 200, description = "Déconnexion réussie", body = inline(ApiResponse<LogoutData>)),
-    ),
-    security(
-        ("session_cookie" = [])
+        (status = 200, description = "Déconnexion réussie", body = inline(ApiResponse<LogoutResponse>)),
     )
 )]
 pub async fn log_out(
     req: HttpRequest,
     data: web::Data<AppState>,
 ) -> impl Responder {
-    println!("🚪 POST /api/auth/logout - Tentative de déconnexion");
+    println!("🚪 POST /api/auth/logout - Déconnexion");
     
-    // Récupérer le cookie de session
-    if let Some(cookie) = req.cookie("session_id") {
-        let session_id = cookie.value().to_string();
-        println!("   🍪 Session à supprimer: {}", session_id);
-        
-        // Supprimer la session du stockage
-        if let Ok(mut sessions) = data.sessions.lock() {
-            if sessions.remove(&session_id).is_some() {
-                println!("   ✅ Session supprimée avec succès");
-            } else {
-                println!("   ⚠️  Session introuvable dans le stockage");
-            }
+    // Récupérer le cookie session_id
+    let session_id = match req.cookie("session_id") {
+        Some(cookie) => cookie.value().to_string(),
+        None => {
+            println!("   ℹ️  Aucun cookie session_id trouvé - déjà déconnecté");
+            let logout_response = LogoutResponse { session_found: false };
+            let response = ApiResponse::success_with_message(
+                logout_response,
+                "No active session found"
+            );
+            return HttpResponse::Ok().json(response);
         }
-        
-        // Supprimer le cookie côté client
-        let expire_cookie = Cookie::build("session_id", "")
-            .http_only(false) // Même config que lors de la création
-            .secure(false) // Même config que lors de la création
-            .same_site(actix_web::cookie::SameSite::Lax)
-            .domain("localhost")
-            .path("/")
-            .max_age(actix_web::cookie::time::Duration::seconds(0))
-            .finish();
-        
-        let response = ApiResponse::success_with_message(
-            LogoutData { session_found: true },
-            "Logout successful"
-        );
-        
-        return HttpResponse::Ok()
-            .cookie(expire_cookie)
-            .json(response);
-    }
+    };
     
-    println!("   ⚠️  Aucun cookie de session trouvé pour logout");
-    let response = ApiResponse::success_with_message(
-        LogoutData { session_found: false },
-        "No active session found"
-    );
-    HttpResponse::Ok().json(response)
+    println!("   🔑 Session ID: {}", session_id);
+    
+    // Supprimer la session via le service
+    match data.auth_service.logout(&session_id) {
+        Ok(logout_response) => {
+            if logout_response.session_found {
+                println!("   ✅ Session supprimée");
+            } else {
+                println!("   ⚠️  Session ID non trouvé dans le store");
+            }
+            
+            // Invalider le cookie
+            let cookie = Cookie::build("session_id", "")
+                .path("/")
+                .max_age(actix_web::cookie::time::Duration::seconds(0))
+                .finish();
+            
+            println!("   🍪 Cookie invalidé");
+            
+            let message = if logout_response.session_found {
+                "Logout successful"
+            } else {
+                "No active session found"
+            };
+            
+            let response = ApiResponse::success_with_message(logout_response, message);
+            HttpResponse::Ok()
+                .cookie(cookie)
+                .json(response)
+        }
+        Err(_) => {
+            println!("   ⚠️  Erreur serveur lors de la déconnexion");
+            let error = ErrorResponse::new("Internal server error");
+            HttpResponse::InternalServerError().json(error)
+        }
+    }
 }
