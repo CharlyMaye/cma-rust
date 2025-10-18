@@ -125,8 +125,8 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 RUN rustup component add rustfmt clippy rust-src
 
 # Set development working directory
-# Mount workspace source code here: -v $(pwd):/work
-WORKDIR /work
+# Mount workspace source code here: -v $(pwd):/workspace
+WORKDIR /workspace
 
 # Default command: Interactive shell for development
 # Allows developers to run cargo commands, edit code, and test applications

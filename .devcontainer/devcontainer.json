@@ -1,9 +1,8 @@
 {
 	"name": "Rust Wayland Dev",
-  	"build": {
-		"dockerfile": "../docker/dev.Dockerfile",
-		"context": ".."
-  	},
+	"dockerComposeFile": "../docker/docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspaces",
 	"remoteUser": "root",
 	"customizations": {
 		"vscode": {
@@ -21,5 +20,22 @@
 		}
 	},
 	"containerEnv": { "CARGO_TERM_COLOR": "always" },
+	"forwardPorts": [8081, 6333, 6334, 27017],
+	"portsAttributes": {
+		"8081": {
+			"label": "Mongo Express",
+			"onAutoForward": "openBrowser"
+		},
+		"6333": {
+			"label": "Qdrant Dashboard",
+			"onAutoForward": "openBrowser"
+		},
+		"6334": {
+			"label": "Qdrant gRPC"
+		},
+		"27017": {
+			"label": "MongoDB"
+		}
+	},
 	"postCreateCommand": "rustup default stable && rustup component add rustfmt clippy && cargo --version && cargo install rustlings"
 }

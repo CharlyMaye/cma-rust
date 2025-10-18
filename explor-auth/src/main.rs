@@ -4,8 +4,11 @@ use std::collections::HashMap;
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 
-pub mod authentication;
-pub mod model;
+
+mod authentication;
+mod documents;
+mod model;
+
 use authentication::configure_auth_routes;
 
 use crate::model::AppState;
