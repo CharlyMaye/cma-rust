@@ -65,6 +65,7 @@ impl MongoConnection {
         &self.database
     }
 
+    #[allow(dead_code)]
     pub fn client(&self) -> &Client {
         &self.client
     }

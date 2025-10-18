@@ -9,6 +9,7 @@ pub struct DocumentDataProvider {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum DataProviderError {
     MongoError(mongodb::error::Error),
     InvalidObjectId(String),

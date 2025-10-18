@@ -101,7 +101,7 @@ async fn main() -> std::io::Result<()> {
     let app_state = web::Data::new(
         AppState::new()
             .await
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?,
+            .map_err(std::io::Error::other)?,
     );
 
     let server_host = config.server.host.clone();

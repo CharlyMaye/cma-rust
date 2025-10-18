@@ -6,9 +6,12 @@ use crate::db::MongoConnection;
 use crate::documents::DocumentService;
 
 pub struct AppState {
+    #[allow(dead_code)]
     pub app_name: String,
+    #[allow(dead_code)]
     pub counter: Mutex<i32>,
     pub auth_service: AuthService,
+    #[allow(dead_code)]
     pub db: Database,
     pub document_service: DocumentService,
 }

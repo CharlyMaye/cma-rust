@@ -2,6 +2,7 @@ use std::env;
 
 #[derive(Debug, Clone)]
 pub struct Config {
+    #[allow(dead_code)]
     pub database: DatabaseConfig,
     pub server: ServerConfig,
     pub cors: CorsConfig,

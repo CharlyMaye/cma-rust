@@ -104,6 +104,7 @@ impl AuthService {
     }
 
     /// Nettoie les sessions expirées (peut être appelé périodiquement)
+    #[allow(dead_code)]
     pub fn cleanup_expired_sessions(&self) -> Result<usize, AuthError> {
         let mut sessions = self.sessions.lock().map_err(|_| AuthError::StorageError)?;
 
@@ -115,6 +116,7 @@ impl AuthService {
     }
 
     /// Retourne le nombre de sessions actives (non expirées)
+    #[allow(dead_code)]
     pub fn active_sessions_count(&self) -> Result<usize, AuthError> {
         let sessions = self.sessions.lock().map_err(|_| AuthError::StorageError)?;
 

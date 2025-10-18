@@ -71,11 +71,7 @@ impl DocumentMongo {
     // Convertir de DocumentMongo vers DocumentResponse (DTO)
     pub fn to_response(&self) -> DocumentResponse {
         DocumentResponse {
-            id: self
-                .id
-                .as_ref()
-                .map(|oid| oid.to_hex())
-                .unwrap_or_else(|| "".to_string()),
+            id: self.id.as_ref().map(|oid| oid.to_hex()).unwrap_or_default(),
             doc_id: self.doc_id.clone(),
             content: self.content.clone(),
         }

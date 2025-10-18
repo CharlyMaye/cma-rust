@@ -48,6 +48,7 @@ pub struct LogoutResponse {
 #[derive(Clone, Debug)]
 pub struct Session {
     pub user_id: String,
+    #[allow(dead_code)]
     pub created_at: DateTime<Utc>,
     pub expires_at: DateTime<Utc>,
 }
