@@ -1,16 +1,16 @@
 use actix_web::{
-    body::EitherBody,
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     Error, HttpResponse,
+    body::EitherBody,
+    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
 };
 use futures_util::future::LocalBoxFuture;
-use std::future::{ready, Ready};
 use serde_json::json;
+use std::future::{Ready, ready};
 
 use crate::model::AppState;
 
 /// Middleware d'authentification par cookie
-/// 
+///
 /// Vérifie la présence et la validité du cookie de session à chaque requête.
 /// Si le cookie est valide, la requête continue, sinon retourne 401 Unauthorized.
 pub struct AuthMiddleware;
@@ -51,10 +51,10 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         // Récupérer le cookie de session
         let session_cookie = req.cookie("session_id");
-        
+
         if let Some(cookie) = session_cookie {
             let session_id = cookie.value().to_string();
-            
+
             // Récupérer l'AppState pour vérifier la session via le service
             if let Some(app_state) = req.app_data::<actix_web::web::Data<AppState>>() {
                 // Utiliser le service d'authentification pour vérifier la session
@@ -68,19 +68,21 @@ where
                 }
             }
         }
-        
+
         // Pas de cookie ou session invalide -> 401 Unauthorized
         let (req, _pl) = req.into_parts();
-        let response: HttpResponse = HttpResponse::Unauthorized()
-            .json(json!({
-                "metadata": {
-                    "status": "error",
-                    "message": "Unauthorized - Valid session required"
-                }
-            }));
-        
+        let response: HttpResponse = HttpResponse::Unauthorized().json(json!({
+            "metadata": {
+                "status": "error",
+                "message": "Unauthorized - Valid session required"
+            }
+        }));
+
         Box::pin(async move {
-            Ok(ServiceResponse::new(req, response.map_into_right_body::<B>()))
+            Ok(ServiceResponse::new(
+                req,
+                response.map_into_right_body::<B>(),
+            ))
         })
     }
 }

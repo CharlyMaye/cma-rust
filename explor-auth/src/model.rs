@@ -1,9 +1,9 @@
-use std::sync::Mutex;
 use mongodb::Database;
+use std::sync::Mutex;
 
 use crate::authentication::AuthService;
-use crate::documents::DocumentService;
 use crate::db::MongoConnection;
+use crate::documents::DocumentService;
 
 pub struct AppState {
     pub app_name: String,
@@ -18,13 +18,13 @@ impl AppState {
         // Initialiser MongoDB via le module dédié
         let mongo_connection = MongoConnection::new().await?;
         let database = mongo_connection.database();
-        
+
         // Initialiser le service documents
         let document_service = DocumentService::new(database).await?;
-        
+
         // Initialiser le service d'authentification
         let auth_service = AuthService::new();
-        
+
         Ok(AppState {
             app_name: "My Actix-web App".into(),
             counter: Mutex::new(0),

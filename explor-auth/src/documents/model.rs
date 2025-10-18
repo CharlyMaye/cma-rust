@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct DocumentMongo {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
     pub id: Option<ObjectId>, // Généré automatiquement par MongoDB à l'insertion
-    
+
     pub doc_id: String,
     pub content: String,
 }
@@ -16,39 +16,39 @@ pub struct DocumentMongo {
 use utoipa::ToSchema;
 
 /// Représentation d'un document retourné par l'API
-/// 
+///
 /// Contient l'identifiant MongoDB interne et l'identifiant métier unique.
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct DocumentResponse {
     /// Identifiant MongoDB (ObjectId en hexadécimal)
     #[schema(example = "507f1f77bcf86cd799439011")]
     pub id: String,
-    
+
     /// Identifiant métier unique du document
     #[schema(example = "DOC-2025-001")]
     pub doc_id: String,
-    
+
     /// Contenu du document au format JSON stringifié
     #[schema(example = r#"{"title": "Mon document", "description": "Contenu exemple"}"#)]
     pub content: String,
 }
 
 /// Requête pour créer un nouveau document
-/// 
+///
 /// Le doc_id doit être unique dans la collection.
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct CreateDocumentRequest {
     /// Identifiant métier unique du document
     #[schema(example = "DOC-2025-001")]
     pub doc_id: String,
-    
+
     /// Contenu du document au format JSON stringifié
     #[schema(example = r#"{"title": "Mon document"}"#)]
     pub content: String,
 }
 
 /// Requête pour mettre à jour un document existant
-/// 
+///
 /// Seul le contenu peut être modifié, le doc_id est immuable.
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct UpdateDocumentRequest {
@@ -71,7 +71,8 @@ impl DocumentMongo {
     // Convertir de DocumentMongo vers DocumentResponse (DTO)
     pub fn to_response(&self) -> DocumentResponse {
         DocumentResponse {
-            id: self.id
+            id: self
+                .id
                 .as_ref()
                 .map(|oid| oid.to_hex())
                 .unwrap_or_else(|| "".to_string()),

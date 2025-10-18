@@ -1,21 +1,21 @@
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 mod authentication;
-mod documents;
-mod model;
+mod common;
 mod config;
 mod db;
+mod documents;
 mod middleware;
-mod common;
+mod model;
 
-use crate::model::AppState;
-use crate::config::Config;
-use crate::documents::model::{DocumentResponse, CreateDocumentRequest, UpdateDocumentRequest};
-use crate::authentication::model::{LoginRequest, SessionResponse, LogoutResponse};
+use crate::authentication::model::{LoginRequest, LogoutResponse, SessionResponse};
 use crate::common::{ApiResponse, ErrorResponse, ResponseMetadata};
+use crate::config::Config;
+use crate::documents::model::{CreateDocumentRequest, DocumentResponse, UpdateDocumentRequest};
+use crate::model::AppState;
 
 /// Spécification OpenAPI pour l'API complète
 #[derive(OpenApi)]
@@ -74,29 +74,34 @@ struct SecurityAddon;
 impl utoipa::Modify for SecurityAddon {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         use utoipa::openapi::security::*;
-        
+
         if let Some(components) = openapi.components.as_mut() {
             components.add_security_scheme(
                 "session_cookie",
-                SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("session_id")))
+                SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("session_id"))),
             );
         }
     }
 }
 
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let config = Config::from_env();
-    
-    println!("🚀 Starting Actix-web server on http://{}:{}", config.server.host, config.server.port);
-    println!("📖 Swagger UI available at http://{}:{}/swagger-ui/", config.server.host, config.server.port);
-    
+
+    println!(
+        "🚀 Starting Actix-web server on http://{}:{}",
+        config.server.host, config.server.port
+    );
+    println!(
+        "📖 Swagger UI available at http://{}:{}/swagger-ui/",
+        config.server.host, config.server.port
+    );
+
     // Initialiser l'AppState avec MongoDB
     let app_state = web::Data::new(
         AppState::new()
             .await
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?,
     );
 
     let server_host = config.server.host.clone();
@@ -117,25 +122,20 @@ async fn main() -> std::io::Result<()> {
 
         // Créer la spécification OpenAPI
         let openapi = ApiDoc::openapi();
-        
+
         App::new()
             .wrap(cors)
             .app_data(app_state.clone())
             // Swagger UI - accessible à http://localhost:8080/swagger-ui/
             .service(
-                SwaggerUi::new("/swagger-ui/{_:.*}")
-                    .url("/api-docs/openapi.json", openapi.clone())
+                SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
             // Routes d'authentification (pas de middleware)
             .service(authentication::configure_auth_routes())
             // Routes documents avec middleware d'authentification
-            .service(
-                documents::configure_document_routes()
-                    .wrap(middleware::AuthMiddleware)
-            )
+            .service(documents::configure_document_routes().wrap(middleware::AuthMiddleware))
     })
     .bind((server_host.as_str(), server_port))?
     .run()
     .await
 }
-

@@ -1,11 +1,11 @@
-use actix_web::{web};
+use actix_web::web;
 
-use crate::{authentication::{control::{log_in, log_out, verify_session}}};
+use crate::authentication::control::{log_in, log_out, verify_session};
 
-mod utils;
-pub mod model;
 pub mod control;
+pub mod model;
 pub mod service;
+mod utils;
 
 pub use service::AuthService;
 

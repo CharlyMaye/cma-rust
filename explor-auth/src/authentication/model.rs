@@ -1,32 +1,32 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 // ============ DTOs (Data Transfer Objects) ============
 
 /// Identifiants de connexion (DTO Request)
-/// 
+///
 /// Utilisés pour authentifier un utilisateur.
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct LoginRequest {
     /// Nom d'utilisateur
     #[schema(example = "test")]
     pub user: String,
-    
+
     /// Mot de passe
     #[schema(example = "dGVzdA==")]
     pub password: String,
 }
 
 /// Données de session utilisateur (DTO Response)
-/// 
+///
 /// Retournées après une authentification réussie ou lors de la vérification.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct SessionResponse {
     /// Identifiant de l'utilisateur
     #[schema(example = "test")]
     pub user_id: String,
-    
+
     /// Date d'expiration de la session
     #[schema(example = "2025-10-19T12:00:00Z")]
     pub expires_at: DateTime<Utc>,
@@ -43,7 +43,7 @@ pub struct LogoutResponse {
 // ============ Entité (Domain Model) ============
 
 /// Session stockée côté serveur (entité métier)
-/// 
+///
 /// Représente une session utilisateur active en mémoire.
 #[derive(Clone, Debug)]
 pub struct Session {

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use uuid::Uuid;
 
-use super::model::{LoginRequest, SessionResponse, LogoutResponse, Session};
+use super::model::{LoginRequest, LogoutResponse, Session, SessionResponse};
 use super::utils;
 
 /// Erreurs possibles lors des opérations d'authentification
@@ -19,7 +19,7 @@ pub enum AuthError {
 }
 
 /// Service d'authentification
-/// 
+///
 /// Gère la logique métier de l'authentification :
 /// - Validation des identifiants
 /// - Création et gestion des sessions
@@ -37,16 +37,16 @@ impl AuthService {
     }
 
     /// Authentifie un utilisateur et crée une session
-    /// 
+    ///
     /// # Arguments
     /// * `request` - Les identifiants de connexion
-    /// 
+    ///
     /// # Returns
     /// * `Ok((session_id, SessionResponse))` - L'ID de session et les données de session
     /// * `Err(AuthError)` - Erreur si les identifiants sont invalides
     pub fn login(&self, request: LoginRequest) -> Result<(String, SessionResponse), AuthError> {
         let (username, password) = request.into();
-        
+
         // Valider les identifiants
         if !utils::validate_credentials(&username, &password) {
             return Err(AuthError::InvalidCredentials);
@@ -58,25 +58,23 @@ impl AuthService {
         let session_response = session.to_response();
 
         // Stocker la session
-        let mut sessions = self.sessions.lock()
-            .map_err(|_| AuthError::StorageError)?;
-        
+        let mut sessions = self.sessions.lock().map_err(|_| AuthError::StorageError)?;
+
         sessions.insert(session_id.clone(), session);
 
         Ok((session_id, session_response))
     }
 
     /// Vérifie si une session est valide
-    /// 
+    ///
     /// # Arguments
     /// * `session_id` - L'identifiant de session à vérifier
-    /// 
+    ///
     /// # Returns
     /// * `Ok(SessionResponse)` - Les données de session si valide
     /// * `Err(AuthError)` - Erreur si la session est invalide ou expirée
     pub fn verify_session(&self, session_id: &str) -> Result<SessionResponse, AuthError> {
-        let sessions = self.sessions.lock()
-            .map_err(|_| AuthError::StorageError)?;
+        let sessions = self.sessions.lock().map_err(|_| AuthError::StorageError)?;
 
         match sessions.get(session_id) {
             Some(session) => {
@@ -91,15 +89,14 @@ impl AuthService {
     }
 
     /// Déconnecte un utilisateur en supprimant sa session
-    /// 
+    ///
     /// # Arguments
     /// * `session_id` - L'identifiant de session à supprimer
-    /// 
+    ///
     /// # Returns
     /// * `Ok(LogoutResponse)` - Indique si la session a été trouvée et supprimée
     pub fn logout(&self, session_id: &str) -> Result<LogoutResponse, AuthError> {
-        let mut sessions = self.sessions.lock()
-            .map_err(|_| AuthError::StorageError)?;
+        let mut sessions = self.sessions.lock().map_err(|_| AuthError::StorageError)?;
 
         let session_found = sessions.remove(session_id).is_some();
 
@@ -108,8 +105,7 @@ impl AuthService {
 
     /// Nettoie les sessions expirées (peut être appelé périodiquement)
     pub fn cleanup_expired_sessions(&self) -> Result<usize, AuthError> {
-        let mut sessions = self.sessions.lock()
-            .map_err(|_| AuthError::StorageError)?;
+        let mut sessions = self.sessions.lock().map_err(|_| AuthError::StorageError)?;
 
         let initial_count = sessions.len();
         sessions.retain(|_, session| !session.is_expired());
@@ -120,10 +116,10 @@ impl AuthService {
 
     /// Retourne le nombre de sessions actives (non expirées)
     pub fn active_sessions_count(&self) -> Result<usize, AuthError> {
-        let sessions = self.sessions.lock()
-            .map_err(|_| AuthError::StorageError)?;
+        let sessions = self.sessions.lock().map_err(|_| AuthError::StorageError)?;
 
-        let count = sessions.values()
+        let count = sessions
+            .values()
             .filter(|session| !session.is_expired())
             .count();
 
