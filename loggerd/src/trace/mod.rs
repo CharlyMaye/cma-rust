@@ -10,10 +10,11 @@ use std::io::Error;
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
 
-use concrete_trace::ConcreteTrace;
-use print_trace_handlers::PrintTraceHandler;
-use trace::HandlerRegister;
+pub use concrete_trace::ConcreteTrace;
+pub use print_trace_handlers::PrintTraceHandler;
+pub use trace::HandlerRegister;
 
+pub use handlers::TraceHandler;
 pub use level::TraceLevel;
 pub use trace::Trace;
 
@@ -36,8 +37,8 @@ pub use trace::Trace;
 ///
 /// # Examples
 ///
-/// ```
-/// use loggerd::trace::{create_trace, TraceLevel};
+/// ```no_run
+/// use loggerd::trace::{create_trace, TraceLevel, Trace};
 ///
 /// let (trace, counter) = create_trace().expect("Failed to create trace system");
 /// trace.log(TraceLevel::Info, "Daemon started");
