@@ -1,12 +1,16 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { PreloadAllModules, provideRouter, withComponentInputBinding, withHashLocation, withPreloading } from '@angular/router';
 
 import { routes } from './app.routes';
+import { provideSecurity } from './security';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes)
+    provideHttpClient(withInterceptors([])),
+    provideSecurity(),
+    provideRouter(routes, withComponentInputBinding(), withHashLocation(), withPreloading(PreloadAllModules))
   ]
 };

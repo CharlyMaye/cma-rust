@@ -1,0 +1,31 @@
+<mat-toolbar class="cma-toolbar">
+  <mat-toolbar-row>
+      @if (isHandset$ | async) {
+        <button
+            type="button"
+            aria-label="Toggle sidenav"
+            matIconButton
+            (click)="drawer.toggle()">
+            <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+        </button>
+    }
+    <span>Custom Toolbar</span>
+    <button mat-icon-button (click)="logout()" class="cma-toolbar-logout-button" aria-label="Se déconnecter">
+        <mat-icon>logout</mat-icon>
+    </button>
+  </mat-toolbar-row>
+</mat-toolbar>
+<mat-sidenav-container class="cma-sidenav-container">
+  <mat-sidenav #drawer class="cma-sidenav" 
+      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+      [mode]="(isHandset$ | async) ? 'over' : 'side'"
+      [opened]="(isHandset$ | async) === false">
+    <mat-toolbar>Menu</mat-toolbar>
+    <mat-nav-list>
+      <a mat-list-item href="#">Link 1</a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content class="cma-sidenav-content">
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

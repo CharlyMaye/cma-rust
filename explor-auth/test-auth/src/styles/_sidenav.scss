@@ -1,0 +1,13 @@
+.cma-sidenav-container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+}
+.cma-sidenav {
+    flex: 0;
+    width: max-content;
+}
+.cma-sidenav-content{
+    flex: 1;
+}
